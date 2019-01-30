@@ -1,0 +1,340 @@
+<Earth_Explorer_Header xmlns="http://193.146.123.163/smos/schemas" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://193.146.123.163/smos/schemas HDR_SM_XXXX_MIR_SMUDP2_0400.xsd">
+
+  <Fixed_Header>
+    <File_Name>SM_TEST_MIR_SMUDP2_20150721T102717_20150721T112036_650_001_9</File_Name>
+    <File_Description>L2 Soil Moisture Output User Data Product</File_Description>
+    <Notes> </Notes>
+    <Mission>SMOS</Mission>
+    <File_Class>TEST</File_Class>
+    <File_Type>MIR_SMUDP2</File_Type>
+    <Validity_Period>
+      <Validity_Start>UTC=2015-07-21T10:27:17</Validity_Start>
+      <Validity_Stop>UTC=2015-07-21T11:20:36</Validity_Stop>
+    </Validity_Period>
+    <File_Version>0001</File_Version>
+    <Source>
+      <System>DPGS</System>
+      <Creator>L2PP</Creator>
+      <Creator_Version>650</Creator_Version>
+      <Creation_Date>UTC=2019-01-28T14:44:02</Creation_Date>
+    </Source>
+  </Fixed_Header>
+
+  <Variable_Header>
+    <Main_Product_Header>
+      <Ref_Doc>SO-TN-IDR-GS-0006</Ref_Doc>
+      <Acquisition_Station>SVLD</Acquisition_Station>
+      <Processing_Centre>ESAC</Processing_Centre>
+      <Logical_Proc_Centre>SME</Logical_Proc_Centre>
+      <Orbit_Information>
+        <Phase>+001</Phase>
+        <Cycle>+039</Cycle>
+        <Rel_Orbit>+02075</Rel_Orbit>
+        <Abs_Orbit>+30035</Abs_Orbit>
+        <OSV_TAI>TAI=2015-07-21T10:26:36.000000</OSV_TAI>
+        <OSV_UTC>UTC=2015-07-21T10:26:00.000000</OSV_UTC>
+        <OSV_UT1>UT1=2015-07-21T10:26:00.411000</OSV_UT1>
+        <Leap_Second>                              </Leap_Second>
+        <X_Position unit="m">+0110418.381</X_Position>
+        <Y_Position unit="m">+2256615.332</Y_Position>
+        <Z_Position unit="m">-6778895.876</Z_Position>
+        <X_Velocity unit="m/s">+3320.575840</X_Velocity>
+        <Y_Velocity unit="m/s">-6435.624810</Y_Velocity>
+        <Z_Velocity unit="m/s">-2089.312960</Z_Velocity>
+        <Vector_Source>FP</Vector_Source>
+      </Orbit_Information>
+      <Product_Confidence>NOMINAL</Product_Confidence>
+    </Main_Product_Header>
+    <Specific_Product_Header>
+      <Main_Info>
+        <SPH_Descriptor>MIR_SMUDP2_SPH</SPH_Descriptor>
+        <Time_Info>
+          <Precise_Validity_Start>UTC=2015-07-21T10:27:16.013620</Precise_Validity_Start>
+          <Precise_Validity_Stop>UTC=2015-07-21T11:20:36.444589</Precise_Validity_Stop>
+          <Abs_Orbit_Start>+30035</Abs_Orbit_Start>
+          <Start_Time_ANX_T unit="s">4354.174406</Start_Time_ANX_T>
+          <Abs_Orbit_Stop>+30036</Abs_Orbit_Stop>
+          <Stop_Time_ANX_T unit="s">1550.127763</Stop_Time_ANX_T>
+          <UTC_at_ANX>UTC=2015-07-21T09:14:41.927114</UTC_at_ANX>
+          <Long_at_ANX unit="deg">-048.670742</Long_at_ANX>
+          <Ascending_Flag>A</Ascending_Flag>
+          <Polarisation_Flag>F</Polarisation_Flag>
+        </Time_Info>
+        <Checksum>3714610882</Checksum>
+        <Header_Schema>HDR_SM_XXXX_MIR_SMUDP2_0400.xsd</Header_Schema>
+        <Datablock_Schema>DBL_SM_XXXX_MIR_SMUDP2_0400.binXschema.xml</Datablock_Schema>
+        <Header_Size>015431</Header_Size>
+        <Datablock_Size>00022107778</Datablock_Size>
+        <HW_Identifier>xxxx</HW_Identifier>
+      </Main_Info>
+      <Quality_Information>
+        <Overall_Quality>0</Overall_Quality>
+        <Overall_Quality_Threshold_Low unit="10^-2%">00000</Overall_Quality_Threshold_Low>
+        <Overall_Quality_Threshold_High unit="10^-2%">06600</Overall_Quality_Threshold_High>
+        <Total_L1c_Nodes>99138</Total_L1c_Nodes>
+        <Total_Processed_L1c_Nodes>162</Total_Processed_L1c_Nodes>
+        <Percentage_Rejected_TBs>
+          <Due_To_Amplitude_Range unit="10^-2%">00000</Due_To_Amplitude_Range>
+          <Due_To_TB_Range unit="10^-2%">00000</Due_To_TB_Range>
+          <Due_To_4th_Stokes_Parameter unit="10^-2%">00000</Due_To_4th_Stokes_Parameter>
+          <Due_To_Sun_Point_Flag unit="10^-2%">00278</Due_To_Sun_Point_Flag>
+          <Due_To_Spatial_Resolution unit="10^-2%">09722</Due_To_Spatial_Resolution>
+          <Due_To_1st_Stokes_Anomaly unit="10^-2%">00000</Due_To_1st_Stokes_Anomaly>
+        </Percentage_Rejected_TBs>
+        <Total_Retrieval_Attempted_L1c_Nodes>162</Total_Retrieval_Attempted_L1c_Nodes>
+        <List_of_Retrieval_Cases_Statistics count="1">
+          <Retrieval_Case_Statistics>
+            <Retrieval_Case>Soil_cover</Retrieval_Case>
+            <Total_Nodes>162</Total_Nodes>
+            <Total_Failed_Nodes>0</Total_Failed_Nodes>
+            <R4 count="0"/>
+            <R3 count="2">
+              <Model_Opacity_Level>
+                <Model>MN</Model>
+                <Opacity_Level>Low</Opacity_Level>
+                <Total_Successful_Nodes>34</Total_Successful_Nodes>
+              </Model_Opacity_Level>
+              <Model_Opacity_Level>
+                <Model>MN</Model>
+                <Opacity_Level>Med</Opacity_Level>
+                <Total_Successful_Nodes>35</Total_Successful_Nodes>
+              </Model_Opacity_Level>
+            </R3>
+            <R2 count="2">
+              <Model_Opacity_Level>
+                <Model>MN</Model>
+                <Opacity_Level>Low</Opacity_Level>
+                <Total_Successful_Nodes>68</Total_Successful_Nodes>
+              </Model_Opacity_Level>
+              <Model_Opacity_Level>
+                <Model>MN</Model>
+                <Opacity_Level>Med</Opacity_Level>
+                <Total_Successful_Nodes>25</Total_Successful_Nodes>
+              </Model_Opacity_Level>
+            </R2>
+          </Retrieval_Case_Statistics>
+        </List_of_Retrieval_Cases_Statistics>
+      </Quality_Information>
+      <L2_Product_Location>
+        <Start_Lat unit="deg">-075.526238</Start_Lat>
+        <Start_Long unit="deg">+078.454825</Start_Long>
+        <Stop_Lat unit="deg">+081.598934</Stop_Lat>
+        <Stop_Long unit="deg">-169.631598</Stop_Long>
+        <Mid_Lat unit="deg">+011.414493</Mid_Lat>
+        <Mid_Lon unit="deg">-076.244676</Mid_Lon>
+        <Southernmost_Latitude unit="deg">-015.399000</Southernmost_Latitude>
+        <Southernmost_Gridpoint_ID>1206901</Southernmost_Gridpoint_ID>
+        <Northernmost_Latitude unit="deg">-014.526000</Northernmost_Latitude>
+        <Northernmost_Gridpoint_ID>1204859</Northernmost_Gridpoint_ID>
+        <Easternmost_Longitude unit="deg">-071.000000</Easternmost_Longitude>
+        <Easternmost_Gridpoint_ID>1206908</Easternmost_Gridpoint_ID>
+        <Westernmost_Longitude unit="deg">-073.924004</Westernmost_Longitude>
+        <Westernmost_Gridpoint_ID>1199718</Westernmost_Gridpoint_ID>
+      </L2_Product_Location>
+      <Chi_2_Scale>5.000000e+00</Chi_2_Scale>
+      <List_of_Data_Sets count="20">
+        <Data_Set>
+          <DS_Name>L1C_SM_FILE                   </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_MIR_SCLF1C_20150721T102717_20150721T112036_620_001_1</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>DFFG_FRACTIONS_FILE           </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_TEST_AUX_DFFFRA_20050101T000000_20500101T000000_001_006_9</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>DFFG_XYZ_FILE                 </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_DFFXYZ_20050101T000000_20500101T000000_001_003_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>DFFG_LAI_FILE                 </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_DFFLAI_20150720T000000_20150730T014000_600_001_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>DFFG_LAI_MAX_FILE             </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_DFFLMX_20050101T000000_20500101T000000_001_006_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>DGG_XYZ_FILE                  </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_DGGXYZ_20050101T000000_20500101T000000_001_004_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>DGG_CUR_TAU_NAD_LV_FILE       </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_DGGTLV_20150504T000000_20500101T000000_510_004_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>DGG_CUR_TAU_NAD_FO_FILE       </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_DGGTFO_20150504T000000_20500101T000000_510_004_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>DGG_CUR_ROUGHNESS_H_FILE      </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_DGGROU_20150504T000000_20500101T000000_510_004_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>DGG_CUR_RFI_FILE              </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_DGGRFI_20150421T000000_20500101T000000_510_003_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>DGG_CUR_RFI_FILE              </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_DGGRFI_20150504T000000_20500101T000000_510_003_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>ECMWF_FILE                    </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_ECMWF__20150721T102556_20150721T113236_318_001_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>WEIGHTING_FUNCTION_FILE       </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_WEF____20050101T000000_20500101T000000_001_003_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>MEAN_WEIGHTING_FUNCTION_FILE  </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_MN_WEF_20050101T000000_20500101T000000_001_002_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>DFFG_SOIL_PROPERTIES_FILE     </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_DFFSOI_20050101T000000_20500101T000000_001_002_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>GALAXY_SM_FILE                </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_GAL_SM_20050101T000000_20500101T000000_001_003_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>BULLETIN_B_FILE               </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_OPER_AUX_BULL_B_20150702T000000_20150801T235959_120_001_3</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>LAND_COVER_CLASSES_FILE       </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_TEST_AUX_LANDCL_20050101T000000_20500101T000000_001_005_9</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>SOIL_MOISTURE_CONFIG_FILE     </DS_Name>
+          <DS_Type>R</DS_Type>
+          <DS_Size>0000000000</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>SM_TEST_AUX_CNFSMF_20050101T000000_20500101T000000_001_016_9</Ref_Filename>
+          <Num_DSR>0000000000</Num_DSR>
+          <DSR_Size>00000000</DSR_Size>
+          <Byte_Order>0000</Byte_Order>
+        </Data_Set>
+        <Data_Set>
+          <DS_Name>SM_SWATH                      </DS_Name>
+          <DS_Type>M</DS_Type>
+          <DS_Size>0022107778</DS_Size>
+          <DS_Offset>0000000000</DS_Offset>
+          <Ref_Filename>                                                            </Ref_Filename>
+          <Num_DSR>0000099138</Num_DSR>
+          <DSR_Size>00000223</DSR_Size>
+          <Byte_Order>0123</Byte_Order>
+        </Data_Set>
+      </List_of_Data_Sets>
+    </Specific_Product_Header>
+  </Variable_Header>
+
+</Earth_Explorer_Header>
