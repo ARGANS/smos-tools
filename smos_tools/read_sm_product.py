@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
+import pandas as pd
 
 # Hardcode paths
 schema_path = 'schema/DBL_SM_XXXX_MIR_SMUDP2_0400.binXschema.xml'
@@ -98,11 +99,40 @@ datatype = [('Grid_Point_ID',np.uint32),
             ('X_Swath',np.uint16)
         ]
 
-# Open the data file for reading
-with open(data_path) as file:
-    #n_grid_points = np.fromfile(file, dtype=[('n_grid_points',np.int32)], count=1)
-    n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]
-    print(n_grid_points)
+# Read in a SMOS SM data product, and return a numpy structured array.
+def read_sm_product(filepath):
+    # Open the data file for reading
+    with open(filepath) as file:
+        # Read first unsigned int32, containing number of datapoints to iterate over
+        n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]
+        print('Data file contains {} data points'.format(n_grid_points))
 
-    data = np.fromfile(file, dtype=datatype, count=n_grid_points)
+        print('Reading file... ', end='')
+        data = np.fromfile(file, dtype=datatype, count=n_grid_points)
+        print('Done')
+
+    return data
+
+# Take a numpy structured SM format array and extract just the Soil Moisture information
+# into a pandas dataframe
+def extract_sm(data):
+    # Make every nested structured numpy array into a dataframe of its own
+    base_frame = pd.DataFrame(data)
+    data_frame = pd.DataFrame(data['Retrieval_Results_Data'])
+
+    # Make a dataframe with the columns we care about
+    soil_moisture = pd.concat([base_frame['Grid_Point_ID'], base_frame['Latitude'],
+            base_frame['Longitude'], data_frame['Soil_Moisture']],
+            axis=1) #, keys='Grid_Point_ID')
+
+    return soil_moisture
+
+def plot_sm(data):
+    # Assume a roughly continuous data region for now, just plot all datapoints that aren't -999.
+    df = pd.DataFrame(data)
+
+data = read_sm_product(data_path)
+#plot_sm(data)
+
+sm = extract_sm(data)
 
