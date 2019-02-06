@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Hardcode paths
 schema_path = 'schema/DBL_SM_XXXX_MIR_SMUDP2_0400.binXschema.xml'
@@ -124,16 +125,24 @@ def extract_sm(data):
     soil_moisture = pd.concat([base_frame['Grid_Point_ID'], base_frame['Latitude'],
             base_frame['Longitude'], retrieval_frame['Soil_Moisture']],
             axis=1)
-    soil_moisture = soil_moisture.set_index('Grid_Point_ID')
+    #soil_moisture = soil_moisture.set_index('Grid_Point_ID')
 
     return soil_moisture
 
-def plot_sm(data):
+# Plot any SM values from a dataframe that aren't NaN, with their lat/lon position
+def plot_sm(data_frame):
     # Assume a roughly continuous data region for now, just plot all datapoints that aren't -999.
-    df = pd.DataFrame(data)
+
+    # Take out -999. float values
+    data_frame = data_frame[data_frame['Soil_Moisture'] != -999.0]
+
+    axes = data_frame.plot.scatter('Grid_Point_ID', 'Soil_Moisture')
+    plt.show()
 
 data = read_sm_product(data_path)
 #plot_sm(data)
 
 sm = extract_sm(data)
+
+plot_sm(sm)
 
