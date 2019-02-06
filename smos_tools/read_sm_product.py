@@ -118,12 +118,13 @@ def read_sm_product(filepath):
 def extract_sm(data):
     # Make every nested structured numpy array into a dataframe of its own
     base_frame = pd.DataFrame(data)
-    data_frame = pd.DataFrame(data['Retrieval_Results_Data'])
+    retrieval_frame = pd.DataFrame(data['Retrieval_Results_Data'])
 
     # Make a dataframe with the columns we care about
     soil_moisture = pd.concat([base_frame['Grid_Point_ID'], base_frame['Latitude'],
-            base_frame['Longitude'], data_frame['Soil_Moisture']],
-            axis=1) #, keys='Grid_Point_ID')
+            base_frame['Longitude'], retrieval_frame['Soil_Moisture']],
+            axis=1)
+    soil_moisture = soil_moisture.set_index('Grid_Point_ID')
 
     return soil_moisture
 
