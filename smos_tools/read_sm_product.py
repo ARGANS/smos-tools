@@ -139,10 +139,41 @@ def plot_sm(data_frame):
     axes = data_frame.plot.scatter('Grid_Point_ID', 'Soil_Moisture')
     plt.show()
 
-data = read_sm_product(data_path)
-#plot_sm(data)
+# Plot difference between 2 dataframes containing soil moisture
+def evaluate_sm_diff(smdf1, smdf2):
+    print('Evaluating difference between 2 dataframes...')
 
-sm = extract_sm(data)
+    # Exclude NaN records (reported as Soil_Moisture = -999.0)
+    frame1 = smdf1[smdf1["Soil_Moisture"] != -999.0]
+    frame2 = smdf2[smdf2["Soil_Moisture"] != -999.0]
 
-plot_sm(sm)
+    # Print record counts
+    print('Dataset 1 contains {} valid datarows from {}'.format(len(frame1.index), len(smdf1)))
+    print('Dataset 2 contains {} valid datarows from {}'.format(len(frame2.index), len(smdf2)))
+
+    # Get records in 1 but not 2
+    #extra1 = 
+    # TODO: Need a unique ID for joining, Gridpoint ID not unique
+
+    # Get records in 2 but not 1
+
+    # Get records in common
+    # Get records in common that are same/diff
+    # Plot them
+
+numpy_data = read_sm_product(data_path)
+
+sm_df = extract_sm(numpy_data)
+
+#plot_sm(sm_df)
+
+# Artificially create a second dataframe for testing, and change a couple of rows
+sm_df_mod = sm_df.copy(deep=True)
+sm_df_mod.at[23902, 'Soil_Moisture'] = -999.0
+sm_df_mod.at[23905, 'Soil_Moisture'] = -999.0
+sm_df_mod.at[23907, 'Soil_Moisture'] = -999.0
+sm_df_mod.at[23946, 'Soil_Moisture'] = sm_df_mod.at[23946, 'Soil_Moisture'] + 0.2
+
+# Call function to evaluate the difference between the two
+evaluate_sm_diff(sm_df, sm_df_mod)
 
