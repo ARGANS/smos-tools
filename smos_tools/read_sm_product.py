@@ -119,13 +119,18 @@ def read_sm_product(filepath):
 def extract_sm(data):
     # Make every nested structured numpy array into a dataframe of its own
     base_frame = pd.DataFrame(data)
+    time_frame = pd.DataFrame(data['Mean_Acq_Time'])
     retrieval_frame = pd.DataFrame(data['Retrieval_Results_Data'])
 
     # Make a dataframe with the columns we care about
-    soil_moisture = pd.concat([base_frame['Grid_Point_ID'], base_frame['Latitude'],
-            base_frame['Longitude'], retrieval_frame['Soil_Moisture']],
+    soil_moisture = pd.concat([time_frame['Days'], time_frame['Seconds'],
+            time_frame['Microseconds'], base_frame['Grid_Point_ID'],
+            base_frame['Latitude'], base_frame['Longitude'],
+            retrieval_frame['Soil_Moisture']],
             axis=1)
-    #soil_moisture = soil_moisture.set_index('Grid_Point_ID')
+
+    # The time fields, and the gridpoint ID combine to make a unique index we can join over
+    soil_moisture = soil_moisture.set_index(['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'])
 
     return soil_moisture
 
@@ -148,12 +153,11 @@ def evaluate_sm_diff(smdf1, smdf2):
     frame2 = smdf2[smdf2["Soil_Moisture"] != -999.0]
 
     # Print record counts
-    print('Dataset 1 contains {} valid datarows from {}'.format(len(frame1.index), len(smdf1)))
-    print('Dataset 2 contains {} valid datarows from {}'.format(len(frame2.index), len(smdf2)))
+    print('Dataset 1 contains {}/{} valid datarows'.format(len(frame1.index), len(smdf1)))
+    print('Dataset 2 contains {}/{} valid datarows'.format(len(frame2.index), len(smdf2)))
 
     # Get records in 1 but not 2
     #extra1 = 
-    # TODO: Need a unique ID for joining, Gridpoint ID not unique
 
     # Get records in 2 but not 1
 
@@ -169,10 +173,12 @@ sm_df = extract_sm(numpy_data)
 
 # Artificially create a second dataframe for testing, and change a couple of rows
 sm_df_mod = sm_df.copy(deep=True)
-sm_df_mod.at[23902, 'Soil_Moisture'] = -999.0
-sm_df_mod.at[23905, 'Soil_Moisture'] = -999.0
-sm_df_mod.at[23907, 'Soil_Moisture'] = -999.0
-sm_df_mod.at[23946, 'Soil_Moisture'] = sm_df_mod.at[23946, 'Soil_Moisture'] + 0.2
+sm_df_mod.at[(5680, 39052, 366745, 1205371), 'Soil_Moisture'] = \
+    sm_df_mod.at[(5680, 39052, 366745, 1205371), 'Soil_Moisture'] + 0.2 # 0.103672
+sm_df_mod.at[(5680, 39059, 827423, 1202803), 'Soil_Moisture'] = -999.0 # 0.068059
+sm_df_mod.at[(5680, 39055, 725343, 1203317), 'Soil_Moisture'] = -999.0 # 0.112978
+sm_df_mod.at[(5680, 39051, 937985, 1203830), 'Soil_Moisture'] = -999.0 # 0.116852
+sm_df_mod.at[(5680, 39050, 378980, 1204344), 'Soil_Moisture'] = -999.0 # 0.086155
 
 # Call function to evaluate the difference between the two
 evaluate_sm_diff(sm_df, sm_df_mod)
