@@ -156,20 +156,44 @@ def evaluate_sm_diff(smdf1, smdf2):
     print('Dataset 1 contains {}/{} valid datarows'.format(len(frame1.index), len(smdf1)))
     print('Dataset 2 contains {}/{} valid datarows'.format(len(frame2.index), len(smdf2)))
 
+    # Get records in common
+    common = pd.merge(frame1, frame2, how='inner', on=['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'])
+    common.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude'}, inplace=True)
+    common.drop('Latitude_y', axis=1, inplace=True)
+    common.drop('Longitude_y', axis=1, inplace=True)
+    common['Soil_Moisture_Diff'] = common['Soil_Moisture_y'] - common['Soil_Moisture_x']
+
+    # Outer merge ready for getting new records
+    outer = pd.merge(frame1, frame2, how='outer', on=['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'],
+                     indicator=True)
     # Get records in 1 but not 2
-    #extra1 = 
+    leftonly = outer[outer['_merge'] == 'left_only']
+    leftonly.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude', 'Soil_Moisture_x': 'Soil_Moisture'}, inplace=True)
+    leftonly.drop('Latitude_y', axis=1, inplace=True)
+    leftonly.drop('Longitude_y', axis=1, inplace=True)
+    leftonly.drop('Soil_Moisture_y', axis=1, inplace=True)
+    leftonly.drop('_merge', axis=1, inplace=True)
 
     # Get records in 2 but not 1
+    rightonly = outer[outer['_merge'] == 'right_only']
+    rightonly.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude', 'Soil_Moisture_y': 'Soil_Moisture'}, inplace=True)
+    rightonly.drop('Latitude_y', axis=1, inplace=True)
+    rightonly.drop('Longitude_y', axis=1, inplace=True)
+    rightonly.drop('Soil_Moisture_x', axis=1, inplace=True)
+    rightonly.drop('_merge', axis=1, inplace=True)
 
-    # Get records in common
+    print('Dataset analysis:')
+    print('{} rows common to both datasets.'.format(len(common.index)))
+    print('{} rows in dataset 1 only.'.format(len(leftonly.index)))
+    print('{} rows in dataset 2 only.'.format(len(rightonly.index)))
+
     # Get records in common that are same/diff
     # Plot them
 
 numpy_data = read_sm_product(data_path)
 
 sm_df = extract_sm(numpy_data)
-
-#plot_sm(sm_df)
+plot_sm(sm_df)
 
 # Artificially create a second dataframe for testing, and change a couple of rows
 sm_df_mod = sm_df.copy(deep=True)
