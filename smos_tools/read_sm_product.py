@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import Basemap
 
 # Hardcode paths
 schema_path = 'schema/DBL_SM_XXXX_MIR_SMUDP2_0400.binXschema.xml'
@@ -188,12 +189,22 @@ def evaluate_sm_diff(smdf1, smdf2):
     print('{} rows in dataset 2 only.'.format(len(rightonly.index)))
 
     # Get records in common that are same/diff
-    # Plot them
+
+    # Set up plot
+    m = Basemap(projection='cyl', llcrnrlat=-90, urcrnrlat=90,
+            llcrnrlon=0, urcrnrlon=360, resolution='c')
+    m.drawcoastlines()
+    m.fillcontinents(color='coral', lake_color='aqua')
+    m.drawparallels(np.arange(-90., 120., 30.))
+    m.drawmeridians(np.arange(0., 360., 60.))
+    m.drawmapboundary(fill_color='aqua')
+
+    plt.show()
 
 numpy_data = read_sm_product(data_path)
 
 sm_df = extract_sm(numpy_data)
-plot_sm(sm_df)
+#plot_sm(sm_df)
 
 # Artificially create a second dataframe for testing, and change a couple of rows
 sm_df_mod = sm_df.copy(deep=True)
