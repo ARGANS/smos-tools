@@ -121,3 +121,5 @@ dmypy.json
 # Plaintext files at root
 /*.txt
 
+# this thing
+.idea
