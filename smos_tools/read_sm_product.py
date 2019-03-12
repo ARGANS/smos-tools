@@ -167,6 +167,7 @@ def evaluate_sm_diff(smdf1, smdf2):
     common.drop('Latitude_y', axis=1, inplace=True)
     common.drop('Longitude_y', axis=1, inplace=True)
     common['Soil_Moisture_Diff'] = common['Soil_Moisture_y'] - common['Soil_Moisture_x']
+    common.reset_index(inplace=True)
 
     # Outer merge ready for getting new records
     outer = pd.merge(frame1, frame2, how='outer', on=['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'],
@@ -174,7 +175,7 @@ def evaluate_sm_diff(smdf1, smdf2):
     # Get records in 1 but not 2
     leftonly = outer[outer['_merge'] == 'left_only'].copy()
     leftonly.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude', 'Soil_Moisture_x': 'Soil_Moisture'},
-                               inplace=True)
+                    inplace=True)
     leftonly.drop('Latitude_y', axis=1, inplace=True)
     leftonly.drop('Longitude_y', axis=1, inplace=True)
     leftonly.drop('Soil_Moisture_y', axis=1, inplace=True)
@@ -182,7 +183,8 @@ def evaluate_sm_diff(smdf1, smdf2):
 
     # Get records in 2 but not 1
     rightonly = outer[outer['_merge'] == 'right_only'].copy()
-    rightonly.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude', 'Soil_Moisture_y': 'Soil_Moisture'}, inplace=True)
+    rightonly.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude', 'Soil_Moisture_y': 'Soil_Moisture'},
+                     inplace=True)
     rightonly.drop('Latitude_y', axis=1, inplace=True)
     rightonly.drop('Longitude_y', axis=1, inplace=True)
     rightonly.drop('Soil_Moisture_x', axis=1, inplace=True)
@@ -195,31 +197,84 @@ def evaluate_sm_diff(smdf1, smdf2):
 
     # Get records in common that are same/diff
 
+    fig1 = plt.figure()
     # Set up plot
-    m = Basemap(projection='cyl', llcrnrlat=-90, urcrnrlat=90,
-            llcrnrlon=0, urcrnrlon=360, resolution='c')
+    # find a central lon and lat
+    center_lon = common['Longitude'].mean()
+    centre_lat = common['Latitude'].mean()
+
+    # find a min and max lat and long
+    min_lon = common['Longitude'].min() - 4
+    max_lon = common['Longitude'].max() + 4
+
+    min_lat = common['Latitude'].min() - 4
+    max_lat = common['Latitude'].max() + 4
+
+    # for a full orbit?
+    # width=110574 * 90,
+    # height=16 * 10**6
+
+    m = Basemap(projection='poly',
+                llcrnrlon=min_lon,
+                llcrnrlat=min_lat,
+                urcrnrlat=max_lat,
+                urcrnrlon=max_lon,
+                lat_0=centre_lat, lon_0=center_lon,
+                resolution='l')
+
     m.drawcoastlines()
-    m.fillcontinents(color='coral', lake_color='aqua')
-    m.drawparallels(np.arange(-90., 120., 30.))
-    m.drawmeridians(np.arange(0., 360., 60.))
-    m.drawmapboundary(fill_color='aqua')
+    m.fillcontinents()
+    # labels [left, right, top, bottom]
+    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
+    m.drawmeridians(np.arange(-180, 180, 60.), labels=[False, False, False, True], fontsize=8)
+    m.drawmapboundary()
+
+    m.scatter(common['Longitude'].values,
+              common['Latitude'].values,
+              latlon=True,
+              c=common['Soil_Moisture_Diff'],
+              s=5,
+              zorder=10)
+
+    # add colorbar
+    m.colorbar()
+
+    plt.title("Difference in SM")
+
+    fig2, ax2 = plt.subplots(1)
+    # plot each difference against the index
+    common.plot(x='Grid_Point_ID', y='Soil_Moisture_Diff', ax=ax2, legend=False, rot=90,
+                fontsize=8, clip_on=False, style='o')
+    ax2.set_ylabel('Soil Moisture Diff')
+    ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
+    fig2.tight_layout()
+
+    # plot only the ones with a non-zero difference?
+    fig3, ax3 = plt.subplots(1)
+    common[common['Soil_Moisture_Diff'] != 0].plot(x='Grid_Point_ID', y='Soil_Moisture_Diff', ax=ax3, legend=False,
+                                                   rot=90, fontsize=8, clip_on=False, style='o')
+    ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
+    ax3.set_ylabel('Soil Moisture Diff')
+    fig3.tight_layout()
 
     plt.show()
 
-numpy_data = read_sm_product(data_path)
 
-sm_df = extract_sm(numpy_data)
-#plot_sm(sm_df)
+if __name__ == '__main__':
+    numpy_data = read_sm_product(data_path)
 
-# Artificially create a second dataframe for testing, and change a couple of rows
-sm_df_mod = sm_df.copy(deep=True)
-sm_df_mod.at[(5680, 39052, 366745, 1205371), 'Soil_Moisture'] = \
-    sm_df_mod.at[(5680, 39052, 366745, 1205371), 'Soil_Moisture'] + 0.2 # 0.103672
-sm_df_mod.at[(5680, 39059, 827423, 1202803), 'Soil_Moisture'] = -999.0 # 0.068059
-sm_df_mod.at[(5680, 39055, 725343, 1203317), 'Soil_Moisture'] = -999.0 # 0.112978
-sm_df_mod.at[(5680, 39051, 937985, 1203830), 'Soil_Moisture'] = -999.0 # 0.116852
-sm_df_mod.at[(5680, 39050, 378980, 1204344), 'Soil_Moisture'] = -999.0 # 0.086155
+    sm_df = extract_sm(numpy_data)
+    # plot_sm(sm_df)
 
-# Call function to evaluate the difference between the two
-evaluate_sm_diff(sm_df, sm_df_mod)
+    # Artificially create a second dataframe for testing, and change a couple of rows
+    sm_df_mod = sm_df.copy(deep=True)
+    sm_df_mod.at[(5680, 39052, 366745, 1205371), 'Soil_Moisture'] = \
+        sm_df_mod.at[(5680, 39052, 366745, 1205371), 'Soil_Moisture'] + 0.2  # 0.103672
+    sm_df_mod.at[(5680, 39059, 827423, 1202803), 'Soil_Moisture'] = -999.0  # 0.068059
+    sm_df_mod.at[(5680, 39055, 725343, 1203317), 'Soil_Moisture'] = -999.0  # 0.112978
+    sm_df_mod.at[(5680, 39051, 937985, 1203830), 'Soil_Moisture'] = -999.0  # 0.116852
+    sm_df_mod.at[(5680, 39050, 378980, 1204344), 'Soil_Moisture'] = -999.0  # 0.086155
+
+    # Call function to evaluate the difference between the two
+    evaluate_sm_diff(sm_df, sm_df_mod)
 
