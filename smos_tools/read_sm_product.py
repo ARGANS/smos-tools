@@ -3,10 +3,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+import argparse
+import os
+import sys
 
-# Hardcode paths
-schema_path = 'schema/DBL_SM_XXXX_MIR_SMUDP2_0400.binXschema.xml'
-data_path = 'data/SM_TEST_MIR_SMUDP2_20150721T102717_20150721T112036_650_001_9.DBL'
 
 # Primary array datatype, repeated n_grid_points times, Grid_Point_Data_Type
 datatype = [('Grid_Point_ID', np.uint32),
@@ -261,20 +261,36 @@ def evaluate_sm_diff(smdf1, smdf2):
 
 
 if __name__ == '__main__':
-    numpy_data = read_sm_product(data_path)
 
-    sm_df = extract_sm(numpy_data)
-    # plot_sm(sm_df)
+    # TODO: Reorganise the argparse stuff?
+    parser = argparse.ArgumentParser(description='Read L2SM Processor UDP files')
+    parser.add_argument('--plot-diff', '-d', nargs=2,
+                        help='Evaluate and plot the difference between two UDP files.')
 
-    # Artificially create a second dataframe for testing, and change a couple of rows
-    sm_df_mod = sm_df.copy(deep=True)
-    sm_df_mod.at[(5680, 39052, 366745, 1205371), 'Soil_Moisture'] = \
-        sm_df_mod.at[(5680, 39052, 366745, 1205371), 'Soil_Moisture'] + 0.2  # 0.103672
-    sm_df_mod.at[(5680, 39059, 827423, 1202803), 'Soil_Moisture'] = -999.0  # 0.068059
-    sm_df_mod.at[(5680, 39055, 725343, 1203317), 'Soil_Moisture'] = -999.0  # 0.112978
-    sm_df_mod.at[(5680, 39051, 937985, 1203830), 'Soil_Moisture'] = -999.0  # 0.116852
-    sm_df_mod.at[(5680, 39050, 378980, 1204344), 'Soil_Moisture'] = -999.0  # 0.086155
+    args = parser.parse_args()
 
-    # Call function to evaluate the difference between the two
-    evaluate_sm_diff(sm_df, sm_df_mod)
+    if args.plot_diff:
+        # Requested to plot the difference between two UDP files
+        file1 = os.path.abspath(args.plot_diff[0])
+        file2 = os.path.abspath(args.plot_diff[1])
+
+        print('UDP file 1: {}'.format(file1))
+        fail = False
+        if not os.path.isfile(file1):
+            print('ERROR: UDP file not found.')
+            fail = True
+        print('UDP file 2: {}'.format(file2))
+        if not os.path.isfile(file2):
+            print('ERROR: UDP file not found.')
+            fail = True
+        if fail:
+            sys.exit(1)
+
+        dataframe1 = extract_sm(read_sm_product(file1))
+        dataframe2 = extract_sm(read_sm_product(file2))
+        evaluate_sm_diff(dataframe1, dataframe2)
+    else:
+        # For now this is the only possible command
+        print('No arguments given.')
+        print('Try -h for help')
 
