@@ -250,12 +250,16 @@ def evaluate_sm_diff(smdf1, smdf2):
     fig2.tight_layout()
 
     # plot only the ones with a non-zero difference?
-    fig3, ax3 = plt.subplots(1)
-    common[common['Soil_Moisture_Diff'] != 0].plot(x='Grid_Point_ID', y='Soil_Moisture_Diff', ax=ax3, legend=False,
-                                                   rot=90, fontsize=8, clip_on=False, style='o')
-    ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
-    ax3.set_ylabel('Soil Moisture Diff')
-    fig3.tight_layout()
+    non_zero_diff = common[common['Soil_Moisture_Diff'] != 0]
+    if non_zero_diff.empty:
+        print('No differences to plot')
+    else:
+        fig3, ax3 = plt.subplots(1)
+        non_zero_diff.plot(x='Grid_Point_ID', y='Soil_Moisture_Diff', ax=ax3, legend=False,
+                                                       rot=90, fontsize=8, clip_on=False, style='o')
+        ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
+        ax3.set_ylabel('Soil Moisture Diff')
+        fig3.tight_layout()
 
     plt.show()
 
