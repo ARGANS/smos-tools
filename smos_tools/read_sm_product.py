@@ -104,12 +104,16 @@ datatype = [('Grid_Point_ID', np.uint32),
 
 # Read in a SMOS SM data product, and return a numpy structured array.
 def read_sm_product(filepath):
+    """
+    Read the Soil Moisture UDP file
+    :param filepath: path to .DBL file
+    :return: numpy data structure
+    """
     # Open the data file for reading
     with open(filepath) as file:
         # Read first unsigned int32, containing number of datapoints to iterate over
         n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]
         print('Data file contains {} data points'.format(n_grid_points))
-
         print('Reading file... ', end='')
         data = np.fromfile(file, dtype=datatype, count=n_grid_points)
         print('Done')
@@ -120,6 +124,11 @@ def read_sm_product(filepath):
 # Take a numpy structured SM format array and extract just the Soil Moisture information
 # into a pandas dataframe
 def extract_sm(data):
+    """
+    Format the Soil Moisture Data for plotting
+    :param data: numpy structured array
+    :return: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+    """
     # Make every nested structured numpy array into a dataframe of its own
     base_frame = pd.DataFrame(data)
     time_frame = pd.DataFrame(data['Mean_Acq_Time'])
@@ -140,6 +149,11 @@ def extract_sm(data):
 
 # Plot any SM values from a dataframe that aren't NaN, with their lat/lon position
 def plot_sm(data_frame):
+    """
+    Plot soil moisture data on a scatter plot
+    :param data_frame: pandas dataframe containing Soil Moisture with index Grid_Point_ID
+    :return:
+    """
     # Assume a roughly continuous data region for now, just plot all datapoints that aren't -999.
 
     # Take out -999. float values
@@ -151,6 +165,12 @@ def plot_sm(data_frame):
 
 # Plot difference between 2 dataframes containing soil moisture
 def evaluate_sm_diff(smdf1, smdf2):
+    """
+    Plot the difference between two dataframes. Gives map plots and scatter.
+    :param smdf1: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+    :param smdf2: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+    :return:
+    """
     print('Evaluating difference between 2 dataframes...')
 
     # Exclude NaN records (reported as Soil_Moisture = -999.0)
@@ -242,7 +262,7 @@ def evaluate_sm_diff(smdf1, smdf2):
     plt.title("Difference in SM")
 
     fig2, ax2 = plt.subplots(1)
-    # plot each difference against the index
+    # plot each difference against the index grid point id
     common.plot(x='Grid_Point_ID', y='Soil_Moisture_Diff', ax=ax2, legend=False, rot=90,
                 fontsize=8, clip_on=False, style='o')
     ax2.set_ylabel('Soil Moisture Diff')
@@ -256,7 +276,7 @@ def evaluate_sm_diff(smdf1, smdf2):
     else:
         fig3, ax3 = plt.subplots(1)
         non_zero_diff.plot(x='Grid_Point_ID', y='Soil_Moisture_Diff', ax=ax3, legend=False,
-                                                       rot=90, fontsize=8, clip_on=False, style='o')
+                           rot=90, fontsize=8, clip_on=False, style='o')
         ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
         ax3.set_ylabel('Soil Moisture Diff')
         fig3.tight_layout()
@@ -268,7 +288,7 @@ if __name__ == '__main__':
 
     # TODO: Reorganise the argparse stuff?
     parser = argparse.ArgumentParser(description='Read L2SM Processor UDP files')
-    parser.add_argument('--plot-diff', '-d', nargs=2,
+    parser.add_argument('--plot-diff', '-d', nargs=2, metavar='FILE',
                         help='Evaluate and plot the difference between two UDP files.')
 
     args = parser.parse_args()

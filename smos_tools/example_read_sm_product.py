@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import read_sm_product
-import numpy as np
-import pandas as pd
-import argparse
+
 
 if __name__ == '__main__':
     # Included test data
