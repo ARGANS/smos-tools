@@ -102,12 +102,11 @@ datatype = [('Grid_Point_ID', np.uint32),
             ]
 
 
-# Read in a SMOS SM data product, and return a numpy structured array.
 def read_sm_product(filepath):
     """
     Read the Soil Moisture UDP file
     :param filepath: path to .DBL file
-    :return: numpy data structure
+    :return: numpy structured array
     """
     # Open the data file for reading
     with open(filepath) as file:
@@ -121,8 +120,6 @@ def read_sm_product(filepath):
     return data
 
 
-# Take a numpy structured SM format array and extract given field
-# into a pandas dataframe
 def extract_field(data, fieldname):
     """
     Take numpy structured array and extract with requested field into pandas dataframe.
@@ -153,10 +150,11 @@ def extract_field(data, fieldname):
     return extracted_data
 
 
-# Plot any SM values from a dataframe that aren't NaN, with their lat/lon position
-def plot_sm(data_frame, fieldname):
+def plot_field(data_frame, fieldname):
     """
     Plot data on a scatter plot
+
+    Plots only values which are not NaN (-999.0), against their gridpoint ID.
     :param data_frame: pandas dataframe containing a field value and index Grid_Point_ID
     :param fieldname: string of fieldname to plot
     :return:
@@ -170,13 +168,12 @@ def plot_sm(data_frame, fieldname):
     plt.show()
 
 
-# Plot difference between 2 dataframes containing soil moisture
 def evaluate_field_diff(smdf1, smdf2, fieldname):
     """
     Plot the difference between two dataframes for a given field. Gives map plots and scatter.
-    :param smdf1: pandas dataframe containing data field with index Days, Seconds, Microseconds, Grid_Point_ID
-    :param smdf2: pandas dataframe containing data field with index Days, Seconds, Microseconds, Grid_Point_ID
-    :param fieldname: Data field name to compare
+    :param smdf1: pandas dataframe containing the requested data field and index (Days, Seconds, Microseconds, Grid_Point_ID)
+    :param smdf2: pandas dataframe containing the requested data field and index (Days, Seconds, Microseconds, Grid_Point_ID)
+    :param fieldname: String fieldname of the data field to compare
     :return:
     """
     print('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
@@ -299,7 +296,7 @@ if __name__ == '__main__':
     parser.add_argument('--plot-diff', '-d', nargs=2, metavar='FILE',
                         help='Evaluate and plot the difference between two UDP files.')
     parser.add_argument('--field-name', '-f', default='Soil_Moisture',
-                        help='Field name to extract and diff.')
+                        help="Field name to extract and diff. Default 'Soil_Moisture'.")
 
     args = parser.parse_args()
 
@@ -321,13 +318,13 @@ if __name__ == '__main__':
         if fail:
             sys.exit(1)
 
-        print('Extracting field: {}'.format(field))
+        print('Extracting field: {}.'.format(field))
 
         dataframe1 = extract_field(read_sm_product(file1), field)
         dataframe2 = extract_field(read_sm_product(file2), field)
         evaluate_field_diff(dataframe1, dataframe2, field)
     else:
         # For now this is the only possible command
-        print('No arguments given.')
-        print('Try -h for help')
+        print('ERROR: Invalid or no flags given.')
+        print('       Try -h for help.')
 
