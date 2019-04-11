@@ -7,9 +7,11 @@ if __name__ == '__main__':
     schema_path = 'schema/DBL_SM_XXXX_MIR_SMUDP2_0400.binXschema.xml'
     data_path = 'data/SM_TEST_MIR_SMUDP2_20150721T102717_20150721T112036_650_001_9.DBL'
 
+    field = 'Soil_Moisture'
+
     numpy_data = read_sm_product.read_sm_product(data_path)
 
-    sm_df = read_sm_product.extract_sm(numpy_data)
+    sm_df = read_sm_product.extract_field(numpy_data, field)
     # plot_sm(sm_df)
 
     # Artificially create a second dataframe for testing, and change a couple of rows
@@ -22,5 +24,5 @@ if __name__ == '__main__':
     sm_df_mod.at[(5680, 39050, 378980, 1204344), 'Soil_Moisture'] = -999.0  # 0.086155
 
     # Call function to evaluate the difference between the two
-    read_sm_product.evaluate_sm_diff(sm_df, sm_df_mod)
+    read_sm_product.evaluate_field_diff(sm_df, sm_df_mod, field)
 

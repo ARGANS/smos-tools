@@ -121,61 +121,69 @@ def read_sm_product(filepath):
     return data
 
 
-# Take a numpy structured SM format array and extract just the Soil Moisture information
+# Take a numpy structured SM format array and extract given field
 # into a pandas dataframe
-def extract_sm(data):
+def extract_field(data, fieldname):
     """
-    Format the Soil Moisture Data for plotting
+    Take numpy structured array and extract with requested field into pandas dataframe.
     :param data: numpy structured array
-    :return: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+    :param fieldname: string of fieldname inside 'Retrieval_Results_Data' to extract
+    :return: pandas dataframe containing requested field along with index (Days, Seconds, Microseconds, Grid_Point_ID)
     """
     # Make every nested structured numpy array into a dataframe of its own
     base_frame = pd.DataFrame(data)
     time_frame = pd.DataFrame(data['Mean_Acq_Time'])
     retrieval_frame = pd.DataFrame(data['Retrieval_Results_Data'])
 
+    # Look to see if user requested fieldname exists.
+    if not fieldname in retrieval_frame.columns.values:
+        print("ERROR: Couldn't find fieldname '{}' in 'Retrieval_Results_Data'".format(fieldname))
+        sys.exit(1)
+
     # Make a dataframe with the columns we care about
-    soil_moisture = pd.concat([time_frame['Days'], time_frame['Seconds'],
+    extracted_data = pd.concat([time_frame['Days'], time_frame['Seconds'],
             time_frame['Microseconds'], base_frame['Grid_Point_ID'],
             base_frame['Latitude'], base_frame['Longitude'],
-            retrieval_frame['Soil_Moisture']],
+            retrieval_frame[fieldname]],
             axis=1)
 
     # The time fields, and the gridpoint ID combine to make a unique index we can join over
-    soil_moisture = soil_moisture.set_index(['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'])
+    extracted_data = extracted_data.set_index(['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'])
 
-    return soil_moisture
+    return extracted_data
 
 
 # Plot any SM values from a dataframe that aren't NaN, with their lat/lon position
-def plot_sm(data_frame):
+def plot_sm(data_frame, fieldname):
     """
-    Plot soil moisture data on a scatter plot
-    :param data_frame: pandas dataframe containing Soil Moisture with index Grid_Point_ID
+    Plot data on a scatter plot
+    :param data_frame: pandas dataframe containing a field value and index Grid_Point_ID
+    :param fieldname: string of fieldname to plot
     :return:
     """
     # Assume a roughly continuous data region for now, just plot all datapoints that aren't -999.
 
     # Take out -999. float values
-    data_frame = data_frame[data_frame['Soil_Moisture'] != -999.0]
+    data_frame = data_frame[data_frame[fieldname] != -999.0]
 
-    axes = data_frame.plot.scatter('Grid_Point_ID', 'Soil_Moisture')
+    axes = data_frame.plot.scatter('Grid_Point_ID', fieldname)
     plt.show()
 
 
 # Plot difference between 2 dataframes containing soil moisture
-def evaluate_sm_diff(smdf1, smdf2):
+def evaluate_field_diff(smdf1, smdf2, fieldname):
     """
-    Plot the difference between two dataframes. Gives map plots and scatter.
-    :param smdf1: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
-    :param smdf2: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+    Plot the difference between two dataframes for a given field. Gives map plots and scatter.
+    :param smdf1: pandas dataframe containing data field with index Days, Seconds, Microseconds, Grid_Point_ID
+    :param smdf2: pandas dataframe containing data field with index Days, Seconds, Microseconds, Grid_Point_ID
+    :param fieldname: Data field name to compare
     :return:
     """
-    print('Evaluating difference between 2 dataframes...')
+    print('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
 
-    # Exclude NaN records (reported as Soil_Moisture = -999.0)
-    frame1 = smdf1[smdf1["Soil_Moisture"] != -999.0]
-    frame2 = smdf2[smdf2["Soil_Moisture"] != -999.0]
+    # Exclude NaN records (reported as fieldname = -999.0)
+    frame1 = smdf1[smdf1[fieldname] != -999.0]
+    frame2 = smdf2[smdf2[fieldname] != -999.0]
 
     # Print record counts
     print('Dataset 1 contains {}/{} valid datarows'.format(len(frame1.index), len(smdf1)))
@@ -186,7 +194,7 @@ def evaluate_sm_diff(smdf1, smdf2):
     common.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude'}, inplace=True)
     common.drop('Latitude_y', axis=1, inplace=True)
     common.drop('Longitude_y', axis=1, inplace=True)
-    common['Soil_Moisture_Diff'] = common['Soil_Moisture_y'] - common['Soil_Moisture_x']
+    common[fieldname+'_Diff'] = common[fieldname+'_y'] - common[fieldname+'_x']
     common.reset_index(inplace=True)
 
     # Outer merge ready for getting new records
@@ -194,20 +202,20 @@ def evaluate_sm_diff(smdf1, smdf2):
                      indicator=True)
     # Get records in 1 but not 2
     leftonly = outer[outer['_merge'] == 'left_only'].copy()
-    leftonly.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude', 'Soil_Moisture_x': 'Soil_Moisture'},
+    leftonly.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude', fieldname+'_x': fieldname},
                     inplace=True)
     leftonly.drop('Latitude_y', axis=1, inplace=True)
     leftonly.drop('Longitude_y', axis=1, inplace=True)
-    leftonly.drop('Soil_Moisture_y', axis=1, inplace=True)
+    leftonly.drop(fieldname+'_y', axis=1, inplace=True)
     leftonly.drop('_merge', axis=1, inplace=True)
 
     # Get records in 2 but not 1
     rightonly = outer[outer['_merge'] == 'right_only'].copy()
-    rightonly.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude', 'Soil_Moisture_y': 'Soil_Moisture'},
+    rightonly.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude', fieldname+'_y': fieldname},
                      inplace=True)
     rightonly.drop('Latitude_y', axis=1, inplace=True)
     rightonly.drop('Longitude_y', axis=1, inplace=True)
-    rightonly.drop('Soil_Moisture_x', axis=1, inplace=True)
+    rightonly.drop(fieldname+'_x', axis=1, inplace=True)
     rightonly.drop('_merge', axis=1, inplace=True)
 
     print('Dataset analysis:')
@@ -252,33 +260,33 @@ def evaluate_sm_diff(smdf1, smdf2):
     m.scatter(common['Longitude'].values,
               common['Latitude'].values,
               latlon=True,
-              c=common['Soil_Moisture_Diff'],
+              c=common[fieldname+'_Diff'],
               s=5,
               zorder=10)
 
     # add colorbar
     m.colorbar()
 
-    plt.title("Difference in SM")
+    plt.title("Difference in " + fieldname)
 
     fig2, ax2 = plt.subplots(1)
     # plot each difference against the index grid point id
-    common.plot(x='Grid_Point_ID', y='Soil_Moisture_Diff', ax=ax2, legend=False, rot=90,
+    common.plot(x='Grid_Point_ID', y=fieldname+'_Diff', ax=ax2, legend=False, rot=90,
                 fontsize=8, clip_on=False, style='o')
-    ax2.set_ylabel('Soil Moisture Diff')
+    ax2.set_ylabel(fieldname + ' Diff')
     ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
     fig2.tight_layout()
 
     # plot only the ones with a non-zero difference?
-    non_zero_diff = common[common['Soil_Moisture_Diff'] != 0]
+    non_zero_diff = common[common[fieldname+'_Diff'] != 0]
     if non_zero_diff.empty:
         print('No differences to plot')
     else:
         fig3, ax3 = plt.subplots(1)
-        non_zero_diff.plot(x='Grid_Point_ID', y='Soil_Moisture_Diff', ax=ax3, legend=False,
+        non_zero_diff.plot(x='Grid_Point_ID', y=fieldname+'_Diff', ax=ax3, legend=False,
                            rot=90, fontsize=8, clip_on=False, style='o')
         ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
-        ax3.set_ylabel('Soil Moisture Diff')
+        ax3.set_ylabel(fieldname + ' Diff')
         fig3.tight_layout()
 
     plt.show()
@@ -290,6 +298,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Read L2SM Processor UDP files')
     parser.add_argument('--plot-diff', '-d', nargs=2, metavar='FILE',
                         help='Evaluate and plot the difference between two UDP files.')
+    parser.add_argument('--field-name', '-f', default='Soil_Moisture',
+                        help='Field name to extract and diff.')
 
     args = parser.parse_args()
 
@@ -297,6 +307,7 @@ if __name__ == '__main__':
         # Requested to plot the difference between two UDP files
         file1 = os.path.abspath(args.plot_diff[0])
         file2 = os.path.abspath(args.plot_diff[1])
+        field = args.field_name
 
         print('UDP file 1: {}'.format(file1))
         fail = False
@@ -310,9 +321,11 @@ if __name__ == '__main__':
         if fail:
             sys.exit(1)
 
-        dataframe1 = extract_sm(read_sm_product(file1))
-        dataframe2 = extract_sm(read_sm_product(file2))
-        evaluate_sm_diff(dataframe1, dataframe2)
+        print('Extracting field: {}'.format(field))
+
+        dataframe1 = extract_field(read_sm_product(file1), field)
+        dataframe2 = extract_field(read_sm_product(file2), field)
+        evaluate_field_diff(dataframe1, dataframe2, field)
     else:
         # For now this is the only possible command
         print('No arguments given.')
