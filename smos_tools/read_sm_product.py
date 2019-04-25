@@ -399,7 +399,7 @@ if __name__ == '__main__':
         if fail:
             sys.exit(1)
 
-        dataframe = extract_sm(read_sm_product(filename))
+        dataframe = extract_field(read_sm_product(filename), 'Soil_Moisture')
         
         plot_sm_orbit(dataframe)
     else:
