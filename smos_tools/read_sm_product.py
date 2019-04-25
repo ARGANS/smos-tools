@@ -291,16 +291,24 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
 
 
 # Plot a SM orbit from a pandas dataframe
-def plot_sm_orbit(smdf):
+def plot_sm_orbit(smdf, fieldname='Soil_Moisture', mode='default'):
 	"""
     Plot the difference between two dataframes. Gives map plots and scatter.
+    
     :param smdf: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+    :param fieldname: string fieldname of the data field to compare
+    :param mode: string 'default' or 'diff' (for plotting differences)
     :return:
     """
+	## TODO check if fieldname is correct
+	if not(fieldname in smdf.columns):
+		print('ERROR: field name not correct.')
+		sys.exit(1)
+	
 	print('Plotting Soil Moisture dataframe...')
 	
 	# Exclude NaN records (reported as Soil_Moisture = -999.0)
-	smdf = smdf[smdf["Soil_Moisture"] != -999.0]
+	smdf = smdf[smdf[fieldname] != -999.0]
     
 	fig1 = plt.figure()
 	# Set up plot
@@ -324,30 +332,45 @@ def plot_sm_orbit(smdf):
 			llcrnrlat=min_lat,
 			urcrnrlat=max_lat,
 			urcrnrlon=max_lon,
-			lat_0=centre_lat, lon_0=center_lon,
+			lat_0=centre_lat, 
+			lon_0=center_lon,
 			resolution='l')
+			
 	m.drawcoastlines()
 	m.fillcontinents()
 	# labels [left, right, top, bottom]	
 	m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
 	m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8)
 	m.drawmapboundary()
-		
+	
+	if mode == 'default':
+		plt.title("Soil Moisture")
+		cmap = 'viridis_r'
+		c = smdf[fieldname] # geophysical variable to plot 
+	elif mode == 'diff':
+		plt.title("Soil Moisture Difference")
+		cmap = 'bwr'		
+		c = smdf[fieldname] + '_Diff' # geophysical variable to plot
+	else:
+		print('ERROR: incorrect mode argument in function plot_sm_orbit()')
+		sys.exit(1)
+	
 	m.scatter(smdf['Longitude'].values,
 		  smdf['Latitude'].values,
 		  latlon=True,
-		  c=smdf['Soil_Moisture'],
+		  c=c,
 		  s=5,
 		  zorder=10,
-		  cmap='viridis_r',
+		  cmap=cmap,
 		  vmin=0.,
 		  vmax=1.)
 
 	# add colorbar
 	cbar = m.colorbar()
 	cbar.set_label(r'[m$^3$/m$^3$]')
-	plt.title("Soil Moisture")
-
+	
+	
+	
 	plt.show()
 
 
