@@ -168,6 +168,7 @@ def plot_field(data_frame, fieldname):
     plt.show()
 
 
+# Plot difference between 2 dataframes containing soil moisture
 def evaluate_field_diff(smdf1, smdf2, fieldname):
     """
     Plot the difference between two dataframes for a given field. Gives map plots and scatter.
@@ -251,7 +252,7 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     m.fillcontinents()
     # labels [left, right, top, bottom]
     m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
-    m.drawmeridians(np.arange(-180, 180, 60.), labels=[False, False, False, True], fontsize=8)
+    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8)
     m.drawmapboundary()
 
     m.scatter(common['Longitude'].values,
@@ -289,6 +290,67 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     plt.show()
 
 
+# Plot a SM orbit from a pandas dataframe
+def plot_sm_orbit(smdf):
+	"""
+    Plot the difference between two dataframes. Gives map plots and scatter.
+    :param smdf: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+    :return:
+    """
+	print('Plotting Soil Moisture dataframe...')
+	
+	# Exclude NaN records (reported as Soil_Moisture = -999.0)
+	smdf = smdf[smdf["Soil_Moisture"] != -999.0]
+    
+	fig1 = plt.figure()
+	# Set up plot
+	# find a central lon and lat
+	center_lon = smdf['Longitude'].mean()
+	centre_lat = smdf['Latitude'].mean()
+	# find a min and max lat and long
+	min_lon = max(smdf['Longitude'].min() - 4, -180.)
+	max_lon = min(smdf['Longitude'].max() + 4, +180.)
+
+	min_lat = max(smdf['Latitude'].min() - 4, -90.)
+	max_lat = min(smdf['Latitude'].max() + 4, +90.)
+
+	# for a full orbit?
+	# width=110574 * 90,
+	# height=16 * 10**6
+	m = Basemap(
+			projection='cyl',
+			#projection='poly',
+			llcrnrlon=min_lon,
+			llcrnrlat=min_lat,
+			urcrnrlat=max_lat,
+			urcrnrlon=max_lon,
+			lat_0=centre_lat, lon_0=center_lon,
+			resolution='l')
+	m.drawcoastlines()
+	m.fillcontinents()
+	# labels [left, right, top, bottom]	
+	m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
+	m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8)
+	m.drawmapboundary()
+		
+	m.scatter(smdf['Longitude'].values,
+		  smdf['Latitude'].values,
+		  latlon=True,
+		  c=smdf['Soil_Moisture'],
+		  s=5,
+		  zorder=10,
+		  cmap='viridis_r',
+		  vmin=0.,
+		  vmax=1.)
+
+	# add colorbar
+	cbar = m.colorbar()
+	cbar.set_label(r'[m$^3$/m$^3$]')
+	plt.title("Soil Moisture")
+
+	plt.show()
+
+
 if __name__ == '__main__':
 
     # TODO: Reorganise the argparse stuff?
@@ -297,6 +359,8 @@ if __name__ == '__main__':
                         help='Evaluate and plot the difference between two UDP files.')
     parser.add_argument('--field-name', '-f', default='Soil_Moisture',
                         help="Field name to extract and diff. Default 'Soil_Moisture'.")
+    parser.add_argument('--plot-orb', '-o', nargs=1, metavar='FILE',
+                        help='Plot soil moisture orbit from UDP file.')
 
     args = parser.parse_args()
 
@@ -323,6 +387,21 @@ if __name__ == '__main__':
         dataframe1 = extract_field(read_sm_product(file1), field)
         dataframe2 = extract_field(read_sm_product(file2), field)
         evaluate_field_diff(dataframe1, dataframe2, field)
+    elif args.plot_orb:
+        # Requested to plot the SM values for the specific orbit
+        filename = os.path.abspath(args.plot_orb[0])
+        print('UDP file: {}'.format(filename))
+
+        fail = False
+        if not os.path.isfile(filename):
+            print('ERROR: UDP file not found.')
+            fail = True
+        if fail:
+            sys.exit(1)
+
+        dataframe = extract_sm(read_sm_product(filename))
+        
+        plot_sm_orbit(dataframe)
     else:
         # For now this is the only possible command
         print('ERROR: Invalid or no flags given.')
