@@ -226,7 +226,7 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     fig1 = plt.figure()
     # Set up plot
     # find a central lon and lat
-    center_lon = common['Longitude'].mean()
+    centre_lon = common['Longitude'].mean()
     centre_lat = common['Latitude'].mean()
 
     # find a min and max lat and long
@@ -245,7 +245,7 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
                 llcrnrlat=min_lat,
                 urcrnrlat=max_lat,
                 urcrnrlon=max_lon,
-                lat_0=centre_lat, lon_0=center_lon,
+                lat_0=centre_lat, lon_0=centre_lon,
                 resolution='l')
 
     m.drawcoastlines()
@@ -313,30 +313,44 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture', mode='default'):
 	fig1 = plt.figure()
 	# Set up plot
 	# find a central lon and lat
-	center_lon = smdf['Longitude'].mean()
+	centre_lon = smdf['Longitude'].mean()
 	centre_lat = smdf['Latitude'].mean()
 	# find a min and max lat and long
 	min_lon = max(smdf['Longitude'].min() - 4, -180.)
 	max_lon = min(smdf['Longitude'].max() + 4, +180.)
+	delta_lon = np.abs(max_lon - min_lon)
 
 	min_lat = max(smdf['Latitude'].min() - 4, -90.)
 	max_lat = min(smdf['Latitude'].max() + 4, +90.)
-
+	delta_lat = np.abs(max_lat - min_lat)
+	
 	# for a full orbit?
 	# width=110574 * 90,
 	# height=16 * 10**6
-	m = Basemap(
-			projection='cyl',
-			#projection='poly',
-			llcrnrlon=min_lon,
-			llcrnrlat=min_lat,
-			urcrnrlat=max_lat,
-			urcrnrlon=max_lon,
-			lat_0=centre_lat, 
-			lon_0=center_lon,
-			resolution='l')
 			
-	m.drawcoastlines()
+	if delta_lat > 45:
+		lat_0 = 10.
+		lon_0 = centre_lon
+		width = 110574 * 70
+		height = 14 * 10**6
+		dot_size = 1
+	else:
+		lat_0=centre_lat
+		lon_0=centre_lon
+		width=delta_lon * 110574
+		height=delta_lat * 10**5		
+		dot_size = 5
+	
+	m = Basemap(
+			#projection='cyl',
+			projection='poly',
+			lat_0=lat_0,
+			lon_0=lon_0,
+			width=width,
+			height=height,
+			resolution='l')	
+				
+	m.drawcoastlines(linewidth=0.5)
 	m.fillcontinents()
 	# labels [left, right, top, bottom]	
 	m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
@@ -344,11 +358,11 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture', mode='default'):
 	m.drawmapboundary()
 	
 	if mode == 'default':
-		plt.title("Soil Moisture")
+		plt.title(fieldname)
 		cmap = 'viridis_r'
 		c = smdf[fieldname] # geophysical variable to plot 
 	elif mode == 'diff':
-		plt.title("Soil Moisture Difference")
+		plt.title(fieldname + '_Diff')
 		cmap = 'bwr'		
 		c = smdf[fieldname] + '_Diff' # geophysical variable to plot
 	else:
@@ -359,7 +373,7 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture', mode='default'):
 		  smdf['Latitude'].values,
 		  latlon=True,
 		  c=c,
-		  s=5,
+		  s=dot_size,
 		  zorder=10,
 		  cmap=cmap,
 		  vmin=0.,
@@ -368,8 +382,6 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture', mode='default'):
 	# add colorbar
 	cbar = m.colorbar()
 	cbar.set_label(r'[m$^3$/m$^3$]')
-	
-	
 	
 	plt.show()
 
@@ -410,6 +422,7 @@ if __name__ == '__main__':
         dataframe1 = extract_field(read_sm_product(file1), field)
         dataframe2 = extract_field(read_sm_product(file2), field)
         evaluate_field_diff(dataframe1, dataframe2, field)
+    
     elif args.plot_orb:
         # Requested to plot the SM values for the specific orbit
         filename = os.path.abspath(args.plot_orb[0])
