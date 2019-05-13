@@ -25,8 +25,9 @@ def read_os_udp(filename):
     try:
         file = open(filename, 'rb')
     except IOError:
-        logging.error('file {} does not exist'.format(filename))
-    
+        logging.exception('file {} does not exist'.format(filename))
+        raise
+
     logging.info('Reading file...')
     # Read first unsigned int32, containing number of grid points to iterate over
     n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]

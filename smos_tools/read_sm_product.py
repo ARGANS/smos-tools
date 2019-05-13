@@ -20,13 +20,20 @@ def read_sm_product(filepath):
     :return: numpy structured array
     """
     # Open the data file for reading
-    with open(filepath) as file:
-        # Read first unsigned int32, containing number of datapoints to iterate over
-        n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]
-        logging.info('Data file contains {} data points'.format(n_grid_points))
-        logging.info('Reading file... ')
-        data = np.fromfile(file, dtype=datatype, count=n_grid_points)
-        logging.info('Done')
+
+    try:
+        file = open(filepath, 'rb')
+    except IOError:
+        logging.exception('file {} does not exist'.format(filepath))
+        raise
+
+    # Read first unsigned int32, containing number of datapoints to iterate over
+    n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]
+    logging.info('Data file contains {} data points'.format(n_grid_points))
+    logging.info('Reading file... ')
+    data = np.fromfile(file, dtype=datatype, count=n_grid_points)
+    file.close()
+    logging.info('Done')
 
     return data
 

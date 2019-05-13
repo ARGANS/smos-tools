@@ -28,8 +28,9 @@ def read_dtbxy(datatype, dtbxy_file):
 
     try:
         data_file = open(dtbxy_file, 'r')
-    except:
-        logging.error('Unable to open file')
+    except IOError:
+        logging.exception('file {} does not exist'.format(dtbxy_file))
+        raise
 
     # L2OS processor version
     version_number = 670
