@@ -252,14 +252,3 @@ if __name__ == '__main__':
     logging.config.dictConfig(logging_config)
 
     logging.getLogger(__name__)
-    
-    dir_udp = '/home/smos/builds/v6.71/Outputs_ref/SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0'
-    file_udp = 'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0.DBL'
-    filename = os.path.join(dir_udp, file_udp)
-    
-    data = read_os_udp(filename)
-
-    df1 = extract_field(data, 'SSS1')
-
-    #print(df1)
-    plot_os_orbit(df1, 'SSS1')
