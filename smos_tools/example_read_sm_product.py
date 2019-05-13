@@ -20,6 +20,7 @@ if __name__ == '__main__':
     numpy_data = read_sm_product.read_sm_product(data_path)
 
     sm_df = read_sm_product.extract_field(numpy_data, field)
+    print(sm_df)
     # plot_field(sm_df, field)
 
     # Artificially create a second dataframe for testing, and change a couple of rows

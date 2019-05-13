@@ -65,6 +65,10 @@ def extract_field(data, fieldname):
     # The time fields, and the gridpoint ID combine to make a unique index we can join over
     extracted_data = extracted_data.set_index(['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'])
 
+    # convert all -999 to NaN and drop
+    extracted_data.replace(to_replace=-999.0, value=np.nan, inplace=True)
+    extracted_data.dropna(axis=0, inplace=True)
+
     return extracted_data
 
 
@@ -185,7 +189,7 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture', mode='default'):
         #print('ERROR: field name not correct.')
         #sys.exit(1)
     
-    print('Plotting Soil Moisture dataframe...')
+    logging.info('Plotting Soil Moisture dataframe...')
     
     # Exclude NaN records (reported as Soil_Moisture = -999.0)
     smdf = smdf[smdf[fieldname] != -999.0]
