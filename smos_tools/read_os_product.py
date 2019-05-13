@@ -70,39 +70,30 @@ def extract_field(data, fieldname):
     return dataframe    
 
 
-# Plot an OS orbit from a pandas dataframe
-def plot_os_orbit(df, fieldname='SSS1', mode='default'):
+def plot_os_orbit(os_df, fieldname='SSS1'):
     """
-    Plot the difference between two dataframes. Gives map plots and scatter.
+    Plot the ocean salinity UDP field fieldname.
     
-    :param df: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+    :param os_df: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
     :param fieldname: string fieldname of the data field to compare
     :return:
     """
- 
-    # TODO check if fieldname is correct
-    if not(fieldname in df.columns):
-        logging.error('Incorrect field name.')
-        #sys.exit(1)
     
-    logging.info('Plotting {} for the full orbit...'.format(fieldname))
-    
-    # Exclude NaN records 
-    df = df[df[fieldname] != np.NaN]
-    
+    logging.info('Plotting {} orbit...'.format(fieldname))
+
     fig1 = plt.figure()
-    centre_lon = df['Longitude'].mean()
-    centre_lat = df['Latitude'].mean()
+    centre_lon = os_df['Longitude'].mean()
+    centre_lat = os_df['Latitude'].mean()
     # find a min and max lat and long 
     # +-4 took from soil moisture plotting funct
-    min_lon = max(df['Longitude'].min() - 4, -180.)
-    max_lon = min(df['Longitude'].max() + 4, +180.)
-    min_lat = max(df['Latitude'].min() - 4, -90.)
-    max_lat = min(df['Latitude'].max() + 4, +90.)
+    min_lon = max(os_df['Longitude'].min() - 4, -180.)
+    max_lon = min(os_df['Longitude'].max() + 4, +180.)
+    min_lat = max(os_df['Latitude'].min() - 4, -90.)
+    max_lat = min(os_df['Latitude'].max() + 4, +90.)
     delta_lon = np.abs(max_lon - min_lon)
     delta_lat = np.abs(max_lat - min_lat)
 
-    if delta_lat > 45: # for  full orbit
+    if delta_lat > 45:  # for  full orbit
         # lat_0 = 10. for soil moisture is 10
         lat_0 = 5.
         lon_0 = centre_lon
@@ -111,10 +102,10 @@ def plot_os_orbit(df, fieldname='SSS1', mode='default'):
         height = 10**5 * 170 # 100km * 140 deg
         dot_size = 1
     else:
-        lat_0=centre_lat
-        lon_0=centre_lon
-        width=delta_lon * 110574
-        height=delta_lat * 10**5        
+        lat_0 = centre_lat
+        lon_0 = centre_lon
+        width = delta_lon * 110574
+        height = delta_lat * 10**5
         dot_size = 5
     
     m = Basemap(
@@ -129,79 +120,130 @@ def plot_os_orbit(df, fieldname='SSS1', mode='default'):
     m.fillcontinents()
     # labels [left, right, top, bottom]    
     m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
-    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8)
+    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8, rotation=45)
     m.drawmapboundary()
     
-    if (mode == 'default') & (fieldname in ['SSS1', 'SSS2']):
+    if fieldname in ['SSS1', 'SSS2']:
         plt.title(fieldname)
         cmap = 'viridis'
-        c = df[fieldname] # geophysical variable to plot 
+        c = os_df[fieldname]  # geophysical variable to plot
         vmin = 32.
         vmax = 38.
-        m.scatter(df['Longitude'].values,
-          df['Latitude'].values,
-          latlon=True,
-          c=c,
-          s=dot_size,
-          zorder=10,
-          cmap=cmap,
-          vmin=vmin,
-          vmax=vmax,
-          )
+        m.scatter(os_df['Longitude'].values,
+                  os_df['Latitude'].values,
+                  latlon=True,
+                  c=c,
+                  s=dot_size,
+                  zorder=10,
+                  cmap=cmap,
+                  vmin=vmin,
+                  vmax=vmax,
+                  )
         cbar = m.colorbar()
         cbar.set_label('[pss]')
         
-    elif (mode == 'default') & (fieldname == 'SSS3'): # SSS anomaly
+    elif fieldname == 'SSS3': # SSS anomaly
         plt.title('SSS anomaly')
         cmap = 'bwr'
-        c = df[fieldname] # geophysical variable to plot 
+        c = os_df[fieldname] # geophysical variable to plot
         vmin = -0.5
         vmax = +0.5
-        m.scatter(df['Longitude'].values,
-          df['Latitude'].values,
-          latlon=True,
-          c=c,
-          s=dot_size,
-          zorder=10,
-          cmap=cmap,
-          )    
-        cbar = m.colorbar()
-    
-    elif (mode == 'default') & (fieldname not in ['SSS1', 'SSS2', 'SSS3']):
-        plt.title(fieldname)
-        cmap = 'viridis'
-        c = df[fieldname] # geophysical variable to plot 
-        m.scatter(df['Longitude'].values,
-          df['Latitude'].values,
-          latlon=True,
-          c=c,
-          s=dot_size,
-          zorder=10,
-          cmap=cmap,
-          )    
-        cbar = m.colorbar()
-
-    
-    elif mode == 'diff':
-        plt.title(fieldname)
-        cmap = 'bwr'        
-        c = df[fieldname] # geophysical variable to plot
-        vmin = -1.
-        vmax = +1.
-        m.scatter(df['Longitude'].values,
-          df['Latitude'].values,
-          latlon=True,
-          c=c,
-          s=dot_size,
-          zorder=10,
-          cmap=cmap,
-          vmin=vmin,
-          vmax=vmax)
+        m.scatter(os_df['Longitude'].values,
+                  os_df['Latitude'].values,
+                  latlon=True,
+                  c=c,
+                  s=dot_size,
+                  zorder=10,
+                  cmap=cmap,
+                  )
         cbar = m.colorbar()
     
     else:
-        logging.error('Incorrect mode argument in function plot_os_orbit()')
-        
+        plt.title(fieldname)
+        cmap = 'viridis'
+        c = os_df[fieldname] # geophysical variable to plot
+        m.scatter(os_df['Longitude'].values,
+                  os_df['Latitude'].values,
+                  latlon=True,
+                  c=c,
+                  s=dot_size,
+                  zorder=10,
+                  cmap=cmap,
+                  )
+        cbar = m.colorbar()
+
+    plt.show()
+
+
+def plot_os_difference(os_df, fieldname='SSS1'):
+    """
+        Plot the ocean salinity UDP difference for fieldname.
+
+        :param os_df: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+        :param fieldname: string fieldname of the data field to compare
+        :return:
+        """
+
+    logging.info('Plotting {} difference...'.format(fieldname))
+
+    fig1 = plt.figure()
+    centre_lon = os_df['Longitude'].mean()
+    centre_lat = os_df['Latitude'].mean()
+    # find a min and max lat and long
+    # +-4 took from soil moisture plotting funct
+    min_lon = max(os_df['Longitude'].min() - 4, -180.)
+    max_lon = min(os_df['Longitude'].max() + 4, +180.)
+    min_lat = max(os_df['Latitude'].min() - 4, -90.)
+    max_lat = min(os_df['Latitude'].max() + 4, +90.)
+    delta_lon = np.abs(max_lon - min_lon)
+    delta_lat = np.abs(max_lat - min_lat)
+
+    if delta_lat > 45:  # for  full orbit
+        # lat_0 = 10. for soil moisture is 10
+        lat_0 = 5.
+        lon_0 = centre_lon
+        width = 110574 * 70  # ~100km * 70 deg
+        # height = 140 * 10**5 # 100km * 140 deg
+        height = 10 ** 5 * 170  # 100km * 140 deg
+        dot_size = 1
+    else:
+        lat_0 = centre_lat
+        lon_0 = centre_lon
+        width = delta_lon * 110574
+        height = delta_lat * 10 ** 5
+        dot_size = 5
+
+    m = Basemap(
+        projection='poly',
+        lat_0=lat_0,
+        lon_0=lon_0,
+        width=width,
+        height=height,
+        resolution='l')
+
+    m.drawcoastlines(linewidth=0.5)
+    m.fillcontinents()
+    # labels [left, right, top, bottom]
+    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
+    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8, rotation=45)
+    m.drawmapboundary()
+
+    plt.title(fieldname)
+    cmap = 'bwr'
+    c = os_df[fieldname]  # geophysical variable to plot
+    vmin = -1.
+    vmax = +1.
+    m.scatter(os_df['Longitude'].values,
+              os_df['Latitude'].values,
+              latlon=True,
+              c=c,
+              s=dot_size,
+              zorder=10,
+              cmap=cmap,
+              vmin=vmin,
+              vmax=vmax)
+    cbar = m.colorbar()
+
     plt.show()   
     
 
