@@ -53,14 +53,14 @@ def extract_field(data, fieldname):
     # Look to see if user requested fieldname exists.
     if fieldname not in retrieval_frame.columns.values:
         logging.error("ERROR: Couldn't find fieldname '{}' in 'Retrieval_Results_Data'".format(fieldname))
-        sys.exit(1)
+        raise KeyError("{} not one of {}".format(fieldname, retrieval_frame.columns.values))
 
     # Make a dataframe with the columns we care about
+
     extracted_data = pd.concat([time_frame['Days'], time_frame['Seconds'],
-            time_frame['Microseconds'], base_frame['Grid_Point_ID'],
-            base_frame['Latitude'], base_frame['Longitude'],
-            retrieval_frame[fieldname]],
-            axis=1)
+                                time_frame['Microseconds'], base_frame['Grid_Point_ID'],
+                                base_frame['Latitude'], base_frame['Longitude'],
+                                retrieval_frame[fieldname]], axis=1)
 
     # The time fields, and the gridpoint ID combine to make a unique index we can join over
     extracted_data = extracted_data.set_index(['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'])
