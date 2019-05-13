@@ -1,8 +1,16 @@
 #!/usr/bin/env python
+import logging
+import logging.config
 import read_sm_product
 
+from smos_tools.logger.logging_config import logging_config
 
 if __name__ == '__main__':
+
+    logging.config.dictConfig(logging_config)
+
+    logging.getLogger(__name__)
+
     # Included test data
     schema_path = 'schema/DBL_SM_XXXX_MIR_SMUDP2_0400.binXschema.xml'
     data_path = 'data/SM_TEST_MIR_SMUDP2_20150721T102717_20150721T112036_650_001_9.DBL'

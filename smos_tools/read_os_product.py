@@ -7,10 +7,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import logging
+import logging.config
 import argparse
 import os
 import sys
 from smos_tools.data_types.os_udp_datatype import datatype
+from smos_tools.logger.logging_config import logging_config
 
 
 def read_os_udp(filename):
@@ -89,7 +91,7 @@ def plot_os_orbit(df, fieldname='SSS1', mode='default'):
         logging.error('Incorrect field name.')
         #sys.exit(1)
     
-    print('Plotting {} for the full orbit...'.format(fieldname))
+    logging.info('Plotting {} for the full orbit...'.format(fieldname))
     
     # Exclude NaN records 
     df = df[df[fieldname] != np.NaN]
@@ -209,24 +211,12 @@ def plot_os_orbit(df, fieldname='SSS1', mode='default'):
         
     plt.show()   
     
-    
-def set_logger(log_level=logging.INFO):
-    """ Set logging"""
 
-    #log_level = logging.DEBUG
-    logger = logging.getLogger()
-    stream = logging.StreamHandler()
-    stream.setLevel(log_level)
-    formatter = logging.Formatter(
-                            fmt='%(asctime)s [%(filename)s - %(levelname)s]: %(message)s',
-                            datefmt='%Y-%m-%d %H:%M:%S',)
-    stream.setFormatter(formatter)
-    logger.addHandler(stream)
-
-    return
-    
-#=========================================================
 if __name__ == '__main__':
+
+    logging.config.dictConfig(logging_config)
+
+    logging.getLogger(__name__)
     
     dir_udp = '/home/smos/builds/v6.71/Outputs_ref/SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0'
     file_udp = 'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0.DBL'

@@ -6,7 +6,11 @@ from mpl_toolkits.basemap import Basemap
 import argparse
 import os
 import sys
+import logging
+import logging.config
+
 from smos_tools.data_types.sm_udp_datatype import datatype
+from smos_tools.logger.logging_config import logging_config
 
 
 def read_sm_product(filepath):
@@ -19,10 +23,10 @@ def read_sm_product(filepath):
     with open(filepath) as file:
         # Read first unsigned int32, containing number of datapoints to iterate over
         n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]
-        print('Data file contains {} data points'.format(n_grid_points))
-        print('Reading file... ', end='')
+        logging.info('Data file contains {} data points'.format(n_grid_points))
+        logging.info('Reading file... ')
         data = np.fromfile(file, dtype=datatype, count=n_grid_points)
-        print('Done')
+        logging.info('Done')
 
     return data
 
@@ -40,8 +44,8 @@ def extract_field(data, fieldname):
     retrieval_frame = pd.DataFrame(data['Retrieval_Results_Data'])
 
     # Look to see if user requested fieldname exists.
-    if not fieldname in retrieval_frame.columns.values:
-        print("ERROR: Couldn't find fieldname '{}' in 'Retrieval_Results_Data'".format(fieldname))
+    if fieldname not in retrieval_frame.columns.values:
+        logging.error("ERROR: Couldn't find fieldname '{}' in 'Retrieval_Results_Data'".format(fieldname))
         sys.exit(1)
 
     # Make a dataframe with the columns we care about
@@ -84,15 +88,15 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     :param fieldname: String fieldname of the data field to compare
     :return:
     """
-    print('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
+    logging.info('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
 
     # Exclude NaN records (reported as fieldname = -999.0)
     frame1 = smdf1[smdf1[fieldname] != -999.0]
     frame2 = smdf2[smdf2[fieldname] != -999.0]
 
     # Print record counts
-    print('Dataset 1 contains {}/{} valid datarows'.format(len(frame1.index), len(smdf1)))
-    print('Dataset 2 contains {}/{} valid datarows'.format(len(frame2.index), len(smdf2)))
+    logging.info('Dataset 1 contains {}/{} valid datarows'.format(len(frame1.index), len(smdf1)))
+    logging.info('Dataset 2 contains {}/{} valid datarows'.format(len(frame2.index), len(smdf2)))
 
     # Get records in common
     common = pd.merge(frame1, frame2, how='inner', on=['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'])
@@ -123,10 +127,10 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     rightonly.drop(fieldname+'_x', axis=1, inplace=True)
     rightonly.drop('_merge', axis=1, inplace=True)
 
-    print('Dataset analysis:')
-    print('{} rows common to both datasets.'.format(len(common.index)))
-    print('{} rows in dataset 1 only.'.format(len(leftonly.index)))
-    print('{} rows in dataset 2 only.'.format(len(rightonly.index)))
+    logging.info('Dataset analysis:')
+    logging.info('{} rows common to both datasets.'.format(len(common.index)))
+    logging.info('{} rows in dataset 1 only.'.format(len(leftonly.index)))
+    logging.info('{} rows in dataset 2 only.'.format(len(rightonly.index)))
 
     # Get records in common that are same/diff
 
@@ -143,7 +147,7 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     # plot only the ones with a non-zero difference?
     non_zero_diff = common[common[fieldname+'_Diff'] != 0]
     if non_zero_diff.empty:
-        print('No differences to plot')
+        logging.info('No differences to plot')
     else:
         fig3, ax3 = plt.subplots(1)
         non_zero_diff.plot(x='Grid_Point_ID', y=fieldname+'_Diff', ax=ax3, legend=False,
@@ -286,6 +290,10 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture', mode='default'):
 
 
 if __name__ == '__main__':
+
+    logging.config.dictConfig(logging_config)
+
+    logging.getLogger(__name__)
 
     # TODO: Reorganise the argparse stuff?
     parser = argparse.ArgumentParser(description='Read L2SM Processor UDP files')

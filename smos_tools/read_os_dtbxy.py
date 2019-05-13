@@ -11,18 +11,10 @@ import sys
 import numpy as np
 import pandas as pd
 import logging
+import logging.config
 import zipfile
 from smos_tools.data_types.os_dtbxy_datatype import datatype
-
-log_level = logging.DEBUG
-logger = logging.getLogger()
-logger.setLevel(log_level)
-stream = logging.StreamHandler()
-stream.setLevel(log_level)
-formatter = logging.Formatter(fmt='%(asctime)s [%(filename)s - %(levelname)s]: %(message)s',
-                              datefmt='%Y-%m-%d %H:%M:%S',)
-stream.setFormatter(formatter)
-logger.addHandler(stream)
+from smos_tools.logger.logging_config import logging_config
 
 
 def read_dtbxy(datatype, dtbxy_file):
@@ -165,15 +157,20 @@ def read_dtbxy(datatype, dtbxy_file):
 
 if __name__ == '__main__':
 
-    dtbxy_file = '/home/famico/work/TESTS/SM-186_CNFOSF_for_v671/TC36/Outputs/' \
-                 'SM_TEST_AUX_DTBXY__20120101T174428_20120101T183740_671_001_0/' \
-                 'SM_TEST_AUX_DTBXY__20120101T174428_20120101T183740_671_001_0.DBL'
-    logging.debug(dtbxy_file)
+    logging.config.dictConfig(logging_config)
+
+    logging.getLogger(__name__)
+
+    dtbxy_file = '/home/rdavies/workspace/v670/test_data_v670/v670/' \
+                 'SM_TEST_AUX_DTBXY__20140402T010641_20140402T015956_670_001_8/' \
+                 'SM_TEST_AUX_DTBXY__20140402T010641_20140402T015956_670_001_8.DBL'
+
+    logging.info(dtbxy_file)
 
     import time
     t_start = time.time()
     read_dtbxy(datatype, dtbxy_file)
     t_end = time.time()
     t = t_end - t_start
-    print('function read_dtbxy runs in ', t, ' seconds.')
+    logging.info('function read_dtbxy runs in {}  seconds.'.format(t))
 
