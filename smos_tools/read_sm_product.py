@@ -13,6 +13,8 @@ from smos_tools.data_types.sm_udp_datatype import datatype
 from smos_tools.logger.logging_config import logging_config
 
 
+
+
 def read_sm_product(filepath):
     """
     Read the Soil Moisture UDP file
@@ -152,6 +154,57 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     plt.show()
 
 
+def setup_sm_plot(lat, long):
+    fig1 = plt.figure()
+    # Set up plot
+    # find a central lon and lat
+    centre_lon = long.mean()
+    centre_lat = lat.mean()
+    # find a min and max lat and long
+    min_lon = max(long.min() - 4, -180.)
+    max_lon = min(long.max() + 4, +180.)
+    delta_lon = np.abs(max_lon - min_lon)
+
+    min_lat = max(lat.min() - 4, -90.)
+    max_lat = min(lat.max() + 4, +90.)
+    delta_lat = np.abs(max_lat - min_lat)
+
+    # for a full orbit?
+    # width=110574 * 90,
+    # height=16 * 10**6
+
+    if delta_lat > 45:
+        lat_0 = 10.
+        lon_0 = centre_lon
+        width = 110574 * 70
+        height = 14 * 10 ** 6
+        dot_size = 1
+    else:
+        lat_0 = centre_lat
+        lon_0 = centre_lon
+        width = delta_lon * 110574
+        height = delta_lat * 10 ** 5
+        dot_size = 5
+
+    m = Basemap(
+        # projection='cyl',
+        projection='poly',
+        lat_0=lat_0,
+        lon_0=lon_0,
+        width=width,
+        height=height,
+        resolution='l')
+
+    m.drawcoastlines(linewidth=0.5)
+    m.fillcontinents()
+    # labels [left, right, top, bottom]
+    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
+    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8, rotation=45)
+    m.drawmapboundary()
+
+    return fig1, m, dot_size
+
+
 # Plot a SM orbit from a pandas dataframe
 def plot_sm_orbit(smdf, fieldname='Soil_Moisture'):
     """
@@ -164,57 +217,12 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture'):
 
     logging.info('Plotting {} orbit...'.format(fieldname))
     
-    fig1 = plt.figure()
-    # Set up plot
-    # find a central lon and lat
-    centre_lon = smdf['Longitude'].mean()
-    centre_lat = smdf['Latitude'].mean()
-    # find a min and max lat and long
-    min_lon = max(smdf['Longitude'].min() - 4, -180.)
-    max_lon = min(smdf['Longitude'].max() + 4, +180.)
-    delta_lon = np.abs(max_lon - min_lon)
-
-    min_lat = max(smdf['Latitude'].min() - 4, -90.)
-    max_lat = min(smdf['Latitude'].max() + 4, +90.)
-    delta_lat = np.abs(max_lat - min_lat)
-    
-    # for a full orbit?
-    # width=110574 * 90,
-    # height=16 * 10**6
-            
-    if delta_lat > 45:
-        lat_0 = 10.
-        lon_0 = centre_lon
-        width = 110574 * 70
-        height = 14 * 10**6
-        dot_size = 1
-    else:
-        lat_0=centre_lat
-        lon_0=centre_lon
-        width=delta_lon * 110574
-        height=delta_lat * 10**5        
-        dot_size = 5
-    
-    m = Basemap(
-            #projection='cyl',
-            projection='poly',
-            lat_0=lat_0,
-            lon_0=lon_0,
-            width=width,
-            height=height,
-            resolution='l')    
-                
-    m.drawcoastlines(linewidth=0.5)
-    m.fillcontinents()
-    # labels [left, right, top, bottom]    
-    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
-    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8)
-    m.drawmapboundary()
+    fig, m, dot_size = setup_sm_plot(smdf['Latitude'].values, smdf['Longitude'].values)
     
     if fieldname == 'Soil_Moisture':
         plt.title(fieldname)
         cmap = 'viridis_r'
-        c = smdf[fieldname] # geophysical variable to plot 
+        c = smdf[fieldname]  # geophysical variable to plot
         vmin = 0.
         vmax = 1.
         m.scatter(smdf['Longitude'].values,
@@ -257,52 +265,7 @@ def plot_sm_difference(smdf, fieldname='Soil_Moisture'):
         """
     logging.info('Plotting {} difference ...'.format(fieldname))
 
-    fig1 = plt.figure()
-    # Set up plot
-    # find a central lon and lat
-    centre_lon = smdf['Longitude'].mean()
-    centre_lat = smdf['Latitude'].mean()
-    # find a min and max lat and long
-    min_lon = max(smdf['Longitude'].min() - 4, -180.)
-    max_lon = min(smdf['Longitude'].max() + 4, +180.)
-    delta_lon = np.abs(max_lon - min_lon)
-
-    min_lat = max(smdf['Latitude'].min() - 4, -90.)
-    max_lat = min(smdf['Latitude'].max() + 4, +90.)
-    delta_lat = np.abs(max_lat - min_lat)
-
-    # for a full orbit?
-    # width=110574 * 90,
-    # height=16 * 10**6
-
-    if delta_lat > 45:
-        lat_0 = 10.
-        lon_0 = centre_lon
-        width = 110574 * 70
-        height = 14 * 10 ** 6
-        dot_size = 1
-    else:
-        lat_0 = centre_lat
-        lon_0 = centre_lon
-        width = delta_lon * 110574
-        height = delta_lat * 10 ** 5
-        dot_size = 5
-
-    m = Basemap(
-        # projection='cyl',
-        projection='poly',
-        lat_0=lat_0,
-        lon_0=lon_0,
-        width=width,
-        height=height,
-        resolution='l')
-
-    m.drawcoastlines(linewidth=0.5)
-    m.fillcontinents()
-    # labels [left, right, top, bottom]
-    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
-    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8)
-    m.drawmapboundary()
+    fig, m, dot_size = setup_sm_plot(smdf['Latitude'].values, smdf['Longitude'].values)
 
     plt.title(fieldname)
     cmap = 'bwr'

@@ -67,7 +67,59 @@ def extract_field(data, fieldname):
     dataframe = dataframe.replace(-999, np.NaN)
     dataframe.dropna(axis=0, inplace=True)
     
-    return dataframe    
+    return dataframe
+
+
+def setup_os_plot(lat, long):
+    """
+    Sets up the orbit plot for ocean salinity
+    :param lat: a list of latitudes
+    :param long: a list of longitudes
+    :return: figure object, basemap object, dot_size
+    """
+    fig1 = plt.figure()
+    centre_lon = long.mean()
+    centre_lat = lat.mean()
+    # find a min and max lat and long
+    # +-4 took from soil moisture plotting funct
+    min_lon = max(long.min() - 4, -180.)
+    max_lon = min(long.max() + 4, +180.)
+    min_lat = max(lat.min() - 4, -90.)
+    max_lat = min(lat.max() + 4, +90.)
+    delta_lon = np.abs(max_lon - min_lon)
+    delta_lat = np.abs(max_lat - min_lat)
+
+    if delta_lat > 45:  # for  full orbit
+        # lat_0 = 10. for soil moisture is 10
+        lat_0 = 5.
+        lon_0 = centre_lon
+        width = 110574 * 70  # ~100km * 70 deg
+        # height = 140 * 10**5 # 100km * 140 deg
+        height = 10 ** 5 * 170  # 100km * 140 deg
+        dot_size = 1
+    else:
+        lat_0 = centre_lat
+        lon_0 = centre_lon
+        width = delta_lon * 110574
+        height = delta_lat * 10 ** 5
+        dot_size = 5
+
+    m = Basemap(
+        projection='poly',
+        lat_0=lat_0,
+        lon_0=lon_0,
+        width=width,
+        height=height,
+        resolution='l')
+
+    m.drawcoastlines(linewidth=0.5)
+    m.fillcontinents()
+    # labels [left, right, top, bottom]
+    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
+    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8, rotation=45)
+    m.drawmapboundary()
+
+    return fig1, m, dot_size
 
 
 def plot_os_orbit(os_df, fieldname='SSS1'):
@@ -81,47 +133,7 @@ def plot_os_orbit(os_df, fieldname='SSS1'):
     
     logging.info('Plotting {} orbit...'.format(fieldname))
 
-    fig1 = plt.figure()
-    centre_lon = os_df['Longitude'].mean()
-    centre_lat = os_df['Latitude'].mean()
-    # find a min and max lat and long 
-    # +-4 took from soil moisture plotting funct
-    min_lon = max(os_df['Longitude'].min() - 4, -180.)
-    max_lon = min(os_df['Longitude'].max() + 4, +180.)
-    min_lat = max(os_df['Latitude'].min() - 4, -90.)
-    max_lat = min(os_df['Latitude'].max() + 4, +90.)
-    delta_lon = np.abs(max_lon - min_lon)
-    delta_lat = np.abs(max_lat - min_lat)
-
-    if delta_lat > 45:  # for  full orbit
-        # lat_0 = 10. for soil moisture is 10
-        lat_0 = 5.
-        lon_0 = centre_lon
-        width = 110574 * 70 # ~100km * 70 deg
-        # height = 140 * 10**5 # 100km * 140 deg
-        height = 10**5 * 170 # 100km * 140 deg
-        dot_size = 1
-    else:
-        lat_0 = centre_lat
-        lon_0 = centre_lon
-        width = delta_lon * 110574
-        height = delta_lat * 10**5
-        dot_size = 5
-    
-    m = Basemap(
-            projection='poly',
-            lat_0=lat_0,
-            lon_0=lon_0,
-            width=width,
-            height=height,
-            resolution='l')    
-                
-    m.drawcoastlines(linewidth=0.5)
-    m.fillcontinents()
-    # labels [left, right, top, bottom]    
-    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
-    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8, rotation=45)
-    m.drawmapboundary()
+    figure, m, dot_size = setup_os_plot(os_df['Latitude'].values, os_df['Longitude'].values)
     
     if fieldname in ['SSS1', 'SSS2']:
         plt.title(fieldname)
@@ -142,7 +154,7 @@ def plot_os_orbit(os_df, fieldname='SSS1'):
         cbar = m.colorbar()
         cbar.set_label('[pss]')
         
-    elif fieldname == 'SSS3': # SSS anomaly
+    elif fieldname == 'SSS3':  # SSS anomaly
         plt.title('SSS anomaly')
         cmap = 'bwr'
         c = os_df[fieldname] # geophysical variable to plot
@@ -186,47 +198,7 @@ def plot_os_difference(os_df, fieldname='SSS1'):
 
     logging.info('Plotting {} difference...'.format(fieldname))
 
-    fig1 = plt.figure()
-    centre_lon = os_df['Longitude'].mean()
-    centre_lat = os_df['Latitude'].mean()
-    # find a min and max lat and long
-    # +-4 took from soil moisture plotting funct
-    min_lon = max(os_df['Longitude'].min() - 4, -180.)
-    max_lon = min(os_df['Longitude'].max() + 4, +180.)
-    min_lat = max(os_df['Latitude'].min() - 4, -90.)
-    max_lat = min(os_df['Latitude'].max() + 4, +90.)
-    delta_lon = np.abs(max_lon - min_lon)
-    delta_lat = np.abs(max_lat - min_lat)
-
-    if delta_lat > 45:  # for  full orbit
-        # lat_0 = 10. for soil moisture is 10
-        lat_0 = 5.
-        lon_0 = centre_lon
-        width = 110574 * 70  # ~100km * 70 deg
-        # height = 140 * 10**5 # 100km * 140 deg
-        height = 10 ** 5 * 170  # 100km * 140 deg
-        dot_size = 1
-    else:
-        lat_0 = centre_lat
-        lon_0 = centre_lon
-        width = delta_lon * 110574
-        height = delta_lat * 10 ** 5
-        dot_size = 5
-
-    m = Basemap(
-        projection='poly',
-        lat_0=lat_0,
-        lon_0=lon_0,
-        width=width,
-        height=height,
-        resolution='l')
-
-    m.drawcoastlines(linewidth=0.5)
-    m.fillcontinents()
-    # labels [left, right, top, bottom]
-    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
-    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8, rotation=45)
-    m.drawmapboundary()
+    figure, m, dot_size = setup_os_plot(os_df['Latitude'].values, os_df['Longitude'].values)
 
     plt.title(fieldname)
     cmap = 'bwr'
