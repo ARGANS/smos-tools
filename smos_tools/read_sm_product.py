@@ -127,7 +127,7 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
 
     # Get records in common that are same/diff
 
-    plot_sm_orbit(common, fieldname=fieldname+'_Diff', mode='diff')
+    plot_sm_difference(common, fieldname=fieldname+'_Diff')
 
     fig2, ax2 = plt.subplots(1)
     # plot each difference against the index grid point id
@@ -153,28 +153,16 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
 
 
 # Plot a SM orbit from a pandas dataframe
-def plot_sm_orbit(smdf, fieldname='Soil_Moisture', mode='default'):
+def plot_sm_orbit(smdf, fieldname='Soil_Moisture'):
     """
-    Plot the difference between two dataframes. Gives map plots and scatter.
+     Plot the soil moisture orbit. Gives map plots and scatter.
     
     :param smdf: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
     :param fieldname: string fieldname of the data field to compare
-    :param mode: string 'default' or 'diff' (for plotting differences)
     :return:
     """
-    
-    #print(fieldname)
-    #print(smdf.columns)
- 
-    # TODO check if fieldname is correct
-    #if not(fieldname in smdf.columns):
-        #print('ERROR: field name not correct.')
-        #sys.exit(1)
-    
-    logging.info('Plotting Soil Moisture dataframe...')
-    
-    # Exclude NaN records (reported as Soil_Moisture = -999.0)
-    smdf = smdf[smdf[fieldname] != -999.0]
+
+    logging.info('Plotting {} orbit...'.format(fieldname))
     
     fig1 = plt.figure()
     # Set up plot
@@ -223,7 +211,7 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture', mode='default'):
     m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8)
     m.drawmapboundary()
     
-    if (mode == 'default') & (fieldname == 'Soil_Moisture'):
+    if fieldname == 'Soil_Moisture':
         plt.title(fieldname)
         cmap = 'viridis_r'
         c = smdf[fieldname] # geophysical variable to plot 
@@ -242,8 +230,7 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture', mode='default'):
         cbar = m.colorbar()
         cbar.set_label(r'[m$^3$/m$^3$]')
 
- 
-    elif (mode == 'default') & (fieldname != 'Soil_Moisture'):
+    else:
         plt.title(fieldname)
         cmap = 'viridis'
         c = smdf[fieldname] # geophysical variable to plot 
@@ -257,27 +244,81 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture', mode='default'):
           )    
         cbar = m.colorbar()
 
-          
-    elif mode == 'diff':
-        plt.title(fieldname)
-        cmap = 'bwr'        
-        c = smdf[fieldname] # geophysical variable to plot
-        vmin = -1.
-        vmax = +1.
-        m.scatter(smdf['Longitude'].values,
-          smdf['Latitude'].values,
-          latlon=True,
-          c=c,
-          s=dot_size,
-          zorder=10,
-          cmap=cmap,
-          vmin=vmin,
-          vmax=vmax)
-        cbar = m.colorbar()
-    
+    plt.show()
+
+
+def plot_sm_difference(smdf, fieldname='Soil_Moisture'):
+    """
+        Plot the difference between two dataframes.
+
+        :param smdf: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+        :param fieldname: string fieldname of the data field to compare
+        :return:
+        """
+    logging.info('Plotting {} difference ...'.format(fieldname))
+
+    fig1 = plt.figure()
+    # Set up plot
+    # find a central lon and lat
+    centre_lon = smdf['Longitude'].mean()
+    centre_lat = smdf['Latitude'].mean()
+    # find a min and max lat and long
+    min_lon = max(smdf['Longitude'].min() - 4, -180.)
+    max_lon = min(smdf['Longitude'].max() + 4, +180.)
+    delta_lon = np.abs(max_lon - min_lon)
+
+    min_lat = max(smdf['Latitude'].min() - 4, -90.)
+    max_lat = min(smdf['Latitude'].max() + 4, +90.)
+    delta_lat = np.abs(max_lat - min_lat)
+
+    # for a full orbit?
+    # width=110574 * 90,
+    # height=16 * 10**6
+
+    if delta_lat > 45:
+        lat_0 = 10.
+        lon_0 = centre_lon
+        width = 110574 * 70
+        height = 14 * 10 ** 6
+        dot_size = 1
     else:
-        print('ERROR: incorrect mode argument in function plot_sm_orbit()')
-        sys.exit(1)
+        lat_0 = centre_lat
+        lon_0 = centre_lon
+        width = delta_lon * 110574
+        height = delta_lat * 10 ** 5
+        dot_size = 5
+
+    m = Basemap(
+        # projection='cyl',
+        projection='poly',
+        lat_0=lat_0,
+        lon_0=lon_0,
+        width=width,
+        height=height,
+        resolution='l')
+
+    m.drawcoastlines(linewidth=0.5)
+    m.fillcontinents()
+    # labels [left, right, top, bottom]
+    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
+    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8)
+    m.drawmapboundary()
+
+    plt.title(fieldname)
+    cmap = 'bwr'
+    c = smdf[fieldname]  # geophysical variable to plot
+    vmin = -1.
+    vmax = +1.
+    m.scatter(smdf['Longitude'].values,
+              smdf['Latitude'].values,
+              latlon=True,
+              c=c,
+              s=dot_size,
+              zorder=10,
+              cmap=cmap,
+              vmin=vmin,
+              vmax=vmax)
+    cbar = m.colorbar()
 
     plt.show()
 
