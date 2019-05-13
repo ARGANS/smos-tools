@@ -6,13 +6,12 @@ Read the delta Tb product data block. The file contains a set of delta Tbs on a 
 with associated statistics. See product specs for the contents of the file.
 """
 
-import os
-import sys
+
 import numpy as np
-import pandas as pd
+
 import logging
 import logging.config
-import zipfile
+
 from smos_tools.data_types.os_dtbxy_datatype import datatype
 from smos_tools.logger.logging_config import logging_config
 

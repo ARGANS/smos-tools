@@ -17,4 +17,10 @@ setup(name='smos_tools',
       include_package_data=True,
       scripts=['bin/read_sm_product'],
       zip_safe=False,
+      install_requires=[
+          'numpy',
+          'pandas',
+          'matplotlib',
+
+      ]
       )

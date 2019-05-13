@@ -13,8 +13,6 @@ from smos_tools.data_types.sm_udp_datatype import datatype
 from smos_tools.logger.logging_config import logging_config
 
 
-
-
 def read_sm_product(filepath):
     """
     Read the Soil Moisture UDP file
