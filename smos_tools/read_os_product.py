@@ -10,79 +10,9 @@ import logging
 import argparse
 import os
 import sys
-
-#=================================================
-# UDP data types
-dtype = [('Grid_Point_ID', np.uint32),
-         ('Latitude', np.float32),
-         ('Longitude', np.float32),
-         ('Equiv_ftprt_diam', np.float32),
-         ('Mean_acq_time', np.float32),
-         ('SSS1', np.float32),
-         ('Sigma_SSS1', np.float32),
-         ('SSS2', np.float32),
-         ('Sigma_SSS2', np.float32),
-         ('SSS3', np.float32),
-         ('Sigma_SSS3', np.float32),
-         ('A_card', np.float32),
-         ('Sigma_A_card', np.float32),
-         ('WS', np.float32),
-         ('SST', np.float32),
-         ('Tb_42_5H', np.float32),
-         ('Sigma_Tb_42_5H', np.float32),
-         ('Tb_42_5V', np.float32),
-         ('Sigma_Tb_42_5V', np.float32),
-         ('Tb_42_5X', np.float32),
-         ('Sigma_Tb_42_5X', np.float32),
-         ('Tb_42_5Y', np.float32),
-         ('Sigma_Tb_42_5Y', np.float32),
-         ('Control_Flags_1', np.uint32),
-         ('Control_Flags_2', np.uint32),
-         ('Control_Flags_3', np.uint32),
-         ('Control_Flags_4', np.uint32),
-         ('Dg_chi2_1', np.uint16),
-         ('Dg_chi2_2', np.uint16),
-         ('Dg_chi2_3', np.uint16),
-         ('Dg_chi2_Acard', np.uint16),
-         ('Dg_chi2_P_1', np.uint16),
-         ('Dg_chi2_P_2', np.uint16), 
-         ('Dg_chi2_P_3', np.uint16),
-         ('Dg_chi2_P_Acard', np.uint16),
-         ('Dg_quality_SSS1', np.uint16),
-         ('Dg_quality_SSS2', np.uint16),
-         ('Dg_quality_SSS3', np.uint16),
-         ('Dg_quality_Acard', np.uint16),
-         ('Dg_num_iter_1', np.uint8),
-         ('Dg_num_iter_2', np.uint8),
-         ('Dg_num_iter_3', np.uint8),
-         ('Dg_num_iter_4', np.uint8),
-         ('Dg_num_meas_l1c', np.uint16),
-         ('Dg_num_meas_valid', np.uint16),
-         ('Dg_border_fov', np.uint16),
-         ('Dg_af_fov', np.uint16),
-         ('Dg_sun_tails', np.uint16),
-         ('Dg_sun_glint_area', np.uint16),
-         ('Dg_sun_glint_fov', np.uint16),
-         ('Dg_sun_fov', np.uint16),
-         ('Dg_sun_glint_L2', np.uint16),
-         ('Dg_Suspect_ice', np.uint16),
-         ('Dg_Galactic_Noise_Error', np.uint16),
-         ('Dg_sky', np.uint16),
-         ('Dg_moon_glint', np.uint16),
-         ('Dg_RFI_L1', np.uint16),
-         ('Dg_RFI_X', np.uint16),
-         ('Dg_RFI_Y', np.uint16),
-         ('Dg_RFI_probability', np.uint16),
-         ('X_swath', np.float32),
-         ('Science_Flags_1', np.uint32),
-         ('Science_Flags_2', np.uint32),
-         ('Science_Flags_3', np.uint32),
-         ('Science_Flags_4', np.uint32)
-        ] 
+from smos_tools.data_types.os_udp_datatype import datatype
 
 
-
-#=================================================
 def read_os_udp(filename):
     """
     Read the Ocean Salinity User Data Product file.
@@ -98,7 +28,7 @@ def read_os_udp(filename):
     logging.info('Reading file...')
     # Read first unsigned int32, containing number of grid points to iterate over
     n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]
-    data = np.fromfile(file, dtype=np.dtype(dtype), count=n_grid_points)
+    data = np.fromfile(file, dtype=np.dtype(datatype), count=n_grid_points)
     file.close()
     logging.info('Done.')
     
@@ -143,7 +73,7 @@ def extract_field(data, fieldname):
     return dataframe    
 
 
-### Plot an OS orbit from a pandas dataframe
+# Plot an OS orbit from a pandas dataframe
 def plot_os_orbit(df, fieldname='SSS1', mode='default'):
     """
     Plot the difference between two dataframes. Gives map plots and scatter.
@@ -175,14 +105,13 @@ def plot_os_orbit(df, fieldname='SSS1', mode='default'):
     max_lat = min(df['Latitude'].max() + 4, +90.)
     delta_lon = np.abs(max_lon - min_lon)
     delta_lat = np.abs(max_lat - min_lat)
-    
-            
+
     if delta_lat > 45: # for  full orbit
-        #lat_0 = 10. for soil moisture is 10
+        # lat_0 = 10. for soil moisture is 10
         lat_0 = 5.
         lon_0 = centre_lon
         width = 110574 * 70 # ~100km * 70 deg
-        #height = 140 * 10**5 # 100km * 140 deg        
+        # height = 140 * 10**5 # 100km * 140 deg
         height = 10**5 * 170 # 100km * 140 deg
         dot_size = 1
     else:
@@ -193,7 +122,7 @@ def plot_os_orbit(df, fieldname='SSS1', mode='default'):
         dot_size = 5
     
     m = Basemap(
-            #projection='cyl',
+            # projection='cyl',
             projection='poly',
             lat_0=lat_0,
             lon_0=lon_0,
