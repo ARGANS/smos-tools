@@ -72,24 +72,6 @@ def extract_field(data, fieldname):
     return extracted_data
 
 
-def plot_field(data_frame, fieldname):
-    """
-    Plot data on a scatter plot
-
-    Plots only values which are not NaN (-999.0), against their gridpoint ID.
-    :param data_frame: pandas dataframe containing a field value and index Grid_Point_ID
-    :param fieldname: string of fieldname to plot
-    :return:
-    """
-    # Assume a roughly continuous data region for now, just plot all datapoints that aren't -999.
-
-    # Take out -999. float values
-    data_frame = data_frame[data_frame[fieldname] != -999.0]
-
-    axes = data_frame.plot.scatter('Grid_Point_ID', fieldname)
-    plt.show()
-
-
 # Plot difference between 2 dataframes containing soil moisture
 def evaluate_field_diff(smdf1, smdf2, fieldname):
     """
