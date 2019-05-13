@@ -6,13 +6,14 @@ Read the delta Tb product data block. The file contains a set of delta Tbs on a 
 with associated statistics. See product specs for the contents of the file.
 """
 
-# ======================================================================================================================
-import os, sys
+import os
+import sys
 import numpy as np
 import pandas as pd
 import logging
 import zipfile
-# ======================================================================================================================
+
+
 # data type list of lists. The inner lists are there for each file sub-block.
 data_types = [
             [('MaxValid', 'float32')],
@@ -82,32 +83,30 @@ def read_dtbxy(datatypes, dtbxy_file):
     """
     Read the data block of an AUX_DTBXY file (L2OS v67x).
 
-    :param data_types: list of lists; in each sublist, there is one or more tuples
+    :param datatypes: list of lists; in each sublist, there is one or more tuples
     :param dtbxy_file: string filename
     :return: a list of numpy structures arrays, sometimes nested with other lists and arrays.
     """
-
 
     try:
         data_file = open(dtbxy_file, 'r')
     except:
         logging.error('Unable to open file')
-        return
 
     # L2OS processor version
     version_number = 670
 
     # max valid xi, eta
     max_valid = np.fromfile(data_file, data_types[0], 2)
-    #print(max_valid)
+    # print(max_valid)
 
     # min valid xi, eta
     min_valid = np.fromfile(data_file, data_types[1], 2)
-    #print(min_valid)
+    # print(min_valid)
 
     # get number of regions
     count = np.fromfile(data_file, data_types[2], 1)
-    #print(count)
+    # print(count)
 
     # initialise the lists for region block
     region_stats_dtbs = [0] * 12 * 129 * 129
@@ -218,11 +217,11 @@ def read_dtbxy(datatypes, dtbxy_file):
             gridpoint_count, gridpoint_block]
 
 
-
-
 if __name__ == '__main__':
 
-    dtbxy_file = '/home/famico/work/TESTS/SM-186_CNFOSF_for_v671/TC36/Outputs/SM_TEST_AUX_DTBXY__20120101T174428_20120101T183740_671_001_0/SM_TEST_AUX_DTBXY__20120101T174428_20120101T183740_671_001_0.DBL'
+    dtbxy_file = '/home/famico/work/TESTS/SM-186_CNFOSF_for_v671/TC36/Outputs/' \
+                 'SM_TEST_AUX_DTBXY__20120101T174428_20120101T183740_671_001_0/' \
+                 'SM_TEST_AUX_DTBXY__20120101T174428_20120101T183740_671_001_0.DBL'
     logging.debug(dtbxy_file)
 
     import time
