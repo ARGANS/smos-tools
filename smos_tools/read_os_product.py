@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 
-# This file was moved and maintained in smos-tools git repo
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import logging
 import logging.config
-import argparse
 import os
-import sys
+
 from smos_tools.data_types.os_udp_datatype import datatype
 from smos_tools.logger.logging_config import logging_config
 
@@ -37,20 +34,6 @@ def read_os_udp(filename):
     
     return data
 
-
-def extract_fields(data):
-    """
-    Converts the udp structured array into a pandas dataframe.
-
-    :param data: numpy structured array (record array).  
-    :return: pandas dataframe (one column per field name). 
-    """
-
-    dataframe = pd.DataFrame(data)
-    dataframe = dataframe.replace(-999, np.NaN)
-
-    return dataframe
-    
     
 def extract_field(data, fieldname):
     """
@@ -62,16 +45,27 @@ def extract_field(data, fieldname):
     Mean_acq_time is expressed in UTC decimal days (MJD2000 reference).
     """
 
-    if not(fieldname in data.dtype.fields):
-        logging.error('Argument {} not valid. Select a field name from variable dtypes.'.format(fieldname)) 
+    time_frame = pd.DataFrame(data['Geophysical_Parameters_Data']['Mean_acq_time'], columns=['Mean_acq_time'])
+    lat_frame = pd.DataFrame(data['Grid_Point_Data']['Latitude'], columns=['Latitude'])
+    lon_frame = pd.DataFrame(data['Grid_Point_Data']['Longitude'], columns=['Longitude'])
 
-    time_frame = pd.DataFrame(data['Mean_acq_time'], columns=['Mean_acq_time'])
-    lat_frame = pd.DataFrame(data['Latitude'], columns=['Latitude'])
-    lon_frame = pd.DataFrame(data['Longitude'], columns=['Longitude'])
-    field_frame = pd.DataFrame(data[fieldname], columns=[fieldname])
+    # Hande which sub dictionary the field might be in
+    geophys = [elem[0] for elem in datatype[1][1]]
+    confidence = [elem[0] for elem in datatype[6][1]]
+    if fieldname in geophys:
+        dict_part = 'Geophysical_Parameters_Data'
+    elif fieldname in confidence:
+        dict_part = 'Product_Confidence_Descriptors'
+    else:
+        logging.error("ERROR: Couldn't find fieldname '{}' in "
+                      "'Geophysical_Parameters_Data' or 'Product_Confidence_Descriptors'".format(fieldname))
+        raise KeyError("{} not in Geophysical_Parameters_Data or Product_Confidence_Descriptors".format(fieldname))
+
+    field_frame = pd.DataFrame(data[dict_part][fieldname], columns=[fieldname])
 
     dataframe = pd.concat([time_frame, lat_frame, lon_frame, field_frame], axis=1)
     dataframe = dataframe.replace(-999, np.NaN)
+    dataframe.dropna(axis=0, inplace=True)
     
     return dataframe    
 
@@ -83,7 +77,6 @@ def plot_os_orbit(df, fieldname='SSS1', mode='default'):
     
     :param df: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
     :param fieldname: string fieldname of the data field to compare
-    :param mode: string 'default' or 'diff' (for plotting differences)
     :return:
     """
  
@@ -125,7 +118,6 @@ def plot_os_orbit(df, fieldname='SSS1', mode='default'):
         dot_size = 5
     
     m = Basemap(
-            # projection='cyl',
             projection='poly',
             lat_0=lat_0,
             lon_0=lon_0,
@@ -224,6 +216,8 @@ if __name__ == '__main__':
     filename = os.path.join(dir_udp, file_udp)
     
     data = read_os_udp(filename)
-    df = extract_fields(data)
+
     df1 = extract_field(data, 'SSS1')
-    plot_os_orbit(df, 'SSS1')
+
+    #print(df1)
+    plot_os_orbit(df1, 'SSS1')
