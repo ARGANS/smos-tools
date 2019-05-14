@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(description="Read and plot L2OS Processor UDP f
 
 parser.add_argument('--plot-diff', '-d', nargs=2, metavar='FILE',
                     help='Evaluate and plot the difference between two UDP DBL files.')
-parser.add_argument('--field-name', '-f', default='Soil_Moisture',
+parser.add_argument('--field-name', '-f', default='SSS1',
                     help="Field name to extract and diff. Default 'SSS1'.")
 parser.add_argument('--plot-orb', '-o', nargs=1, metavar='FILE',
                     help='Plot ocean salinity orbit from UDP file.')
@@ -31,15 +31,6 @@ if args.plot_diff:
     # Requested to plot the difference between two UDP files
     file1 = os.path.abspath(args.plot_diff[0])
     file2 = os.path.abspath(args.plot_diff[1])
-
-    # check these files are for the same orbit, else error
-    head, tail1 = os.path.split(file1)
-    head, tail2 = os.path.split(file2)
-
-    if tail1 != tail2:
-        print('ERROR: UDP1 and UDP2 are not for the same orbit!')
-        sys.exit(1)
-
     field = args.field_name
 
     print('UDP file 1: {}'.format(file1))
@@ -54,6 +45,13 @@ if args.plot_diff:
     if fail:
         sys.exit(1)
 
+    # check these files are for the same orbit, else error
+    head, tail1 = os.path.split(file1)
+    head, tail2 = os.path.split(file2)
+
+    if tail1 != tail2:
+        print('ERROR: UDP1 and UDP2 are not for the same orbit!')
+        sys.exit(1)
     print('Extracting field: {}.'.format(field))
 
     dataframe1 = read_os_product.extract_field(read_os_product.read_os_udp(file1), field)
