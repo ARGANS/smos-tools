@@ -6,100 +6,11 @@ from mpl_toolkits.basemap import Basemap
 import argparse
 import os
 import sys
+import logging
+import logging.config
 
-
-# Primary array datatype, repeated n_grid_points times, Grid_Point_Data_Type
-datatype = [('Grid_Point_ID', np.uint32),
-            ('Latitude', np.float32),
-            ('Longitude', np.float32),
-            ('Altitude', np.float32),
-            # UTC_Type
-            ('Mean_Acq_Time', [
-                ('Days', np.int32),
-                ('Seconds', np.uint32),
-                ('Microseconds', np.uint32)
-            ]),
-            # Retrieval_Results_Data_Type
-            ('Retrieval_Results_Data', [
-                ('Soil_Moisture', np.float32),
-                ('Soil_Moisture_DQX', np.float32),
-                ('Optical_Thickness_Nad', np.float32),
-                ('Optical_Thickness_Nad_DQX', np.float32),
-                ('Surface_Temperature', np.float32),
-                ('Surface_Temperature_DQX', np.float32),
-                ('TTH', np.float32),
-                ('TTH_DQX', np.float32),
-                ('RTT', np.float32),
-                ('RTT_DQX', np.float32),
-                ('Scattering_Albedo_H', np.float32),
-                ('Scattering_Albedo_H_DQX', np.float32),
-                ('DIFF_Albedos', np.float32),
-                ('DIFF_Albedos_DQX', np.float32),
-                ('Roughness_Param', np.float32),
-                ('Roughness_Param_DQX', np.float32),
-                ('Dielect_Const_MD_RE', np.float32),
-                ('Dielect_Const_MD_RE_DQX', np.float32),
-                ('Dielect_Const_MD_IM', np.float32),
-                ('Dielect_Const_MD_IM_DQX', np.float32),
-                ('Dielect_Const_Non_MD_RE', np.float32),
-                ('Dielect_Const_Non_MD_RE_DQX', np.float32),
-                ('Dielect_Const_Non_MD_IM', np.float32),
-                ('Dielect_Const_Non_MD_IM_DQX', np.float32),
-                ('TB_ASL_Theta_B_H', np.float32),
-                ('TB_ASL_Theta_B_H_DQX', np.float32),
-                ('TB_ASL_Theta_B_V', np.float32),
-                ('TB_ASL_Theta_B_V_DQX', np.float32),
-                ('TB_TOA_Theta_B_H', np.float32),
-                ('TB_TOA_Theta_B_H_DQX', np.float32),
-                ('TB_TOA_Theta_B_V', np.float32),
-                ('TB_TOA_Theta_B_V_DQX', np.float32)
-            ]),
-            # Confidence_Descriptors_Data_Type
-            ('Confidence_Descriptors_Data', [
-                ('Confidence_Flags', np.uint16),
-                ('GQX', np.uint8),
-                ('Chi_2', np.uint8),
-                ('Chi_2_P', np.uint8),
-                ('N_Wild', np.uint16),
-                ('M_AVA0', np.uint16),
-                ('M_AVA', np.uint16),
-                ('AFP', np.float32),
-                ('N_AF_FOV', np.uint16),
-                ('N_Sun_Tails', np.uint16),
-                ('N_Sun_Glint_Area', np.uint16),
-                ('N_Sun_FOV', np.uint16),
-                ('N_RFI_Mitigations', np.uint16),
-                ('N_Strong_RFI', np.uint16),
-                ('N_Point_Source_RFI', np.uint16),
-                ('N_Tails_Point_Source_RFI', np.uint16),
-                ('N_Software_Error', np.uint16),
-                ('N_Instrument_Error', np.uint16),
-                ('N_ADF_Error', np.uint16),
-                ('N_Calibration_Error', np.uint16),
-                ('N_X_Band', np.uint16)
-            ]),
-            # Science_Descriptors_Data_Type
-            ('Science_Descriptors_Data', [
-                ('Science_Flags', np.uint32),
-                ('N_Sky', np.uint16)
-            ]),
-            # Processing_Descriptors_Data_Type
-            ('Processing_Descriptors_Data', [
-                ('Processing_Flags', np.uint16),
-                ('S_Tree_1', np.uint8),
-                ('S_Tree_2', np.uint8)
-            ]),
-            # DGG_Current_Data_Type
-            ('DGG_Current_Data', [
-                ('DGG_Current_Flags', np.uint8),
-                ('Tau_Cur_DQX', np.float32),
-                ('HR_Cur_DQX', np.float32),
-                ('N_RFI_X', np.uint16),
-                ('N_RFI_Y', np.uint16),
-                ('RFI_Prob', np.uint8)
-            ]),
-            ('X_Swath', np.uint16)
-            ]
+from smos_tools.data_types.sm_udp_datatype import datatype
+from smos_tools.logger.logging_config import logging_config
 
 
 def read_sm_product(filepath):
@@ -109,13 +20,20 @@ def read_sm_product(filepath):
     :return: numpy structured array
     """
     # Open the data file for reading
-    with open(filepath) as file:
-        # Read first unsigned int32, containing number of datapoints to iterate over
-        n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]
-        print('Data file contains {} data points'.format(n_grid_points))
-        print('Reading file... ', end='')
-        data = np.fromfile(file, dtype=datatype, count=n_grid_points)
-        print('Done')
+
+    try:
+        file = open(filepath, 'rb')
+    except IOError:
+        logging.exception('file {} does not exist'.format(filepath))
+        raise
+
+    # Read first unsigned int32, containing number of datapoints to iterate over
+    n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]
+    logging.info('Data file contains {} data points'.format(n_grid_points))
+    logging.info('Reading file... ')
+    data = np.fromfile(file, dtype=datatype, count=n_grid_points)
+    file.close()
+    logging.info('Done')
 
     return data
 
@@ -133,39 +51,25 @@ def extract_field(data, fieldname):
     retrieval_frame = pd.DataFrame(data['Retrieval_Results_Data'])
 
     # Look to see if user requested fieldname exists.
-    if not fieldname in retrieval_frame.columns.values:
-        print("ERROR: Couldn't find fieldname '{}' in 'Retrieval_Results_Data'".format(fieldname))
-        sys.exit(1)
+    if fieldname not in retrieval_frame.columns.values:
+        logging.error("ERROR: Couldn't find fieldname '{}' in 'Retrieval_Results_Data'".format(fieldname))
+        raise KeyError("{} not one of {}".format(fieldname, retrieval_frame.columns.values))
 
     # Make a dataframe with the columns we care about
+
     extracted_data = pd.concat([time_frame['Days'], time_frame['Seconds'],
-            time_frame['Microseconds'], base_frame['Grid_Point_ID'],
-            base_frame['Latitude'], base_frame['Longitude'],
-            retrieval_frame[fieldname]],
-            axis=1)
+                                time_frame['Microseconds'], base_frame['Grid_Point_ID'],
+                                base_frame['Latitude'], base_frame['Longitude'],
+                                retrieval_frame[fieldname]], axis=1)
 
     # The time fields, and the gridpoint ID combine to make a unique index we can join over
     extracted_data = extracted_data.set_index(['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'])
 
+    # convert all -999 to NaN and drop
+    extracted_data.replace(to_replace=-999.0, value=np.nan, inplace=True)
+    extracted_data.dropna(axis=0, inplace=True)
+
     return extracted_data
-
-
-def plot_field(data_frame, fieldname):
-    """
-    Plot data on a scatter plot
-
-    Plots only values which are not NaN (-999.0), against their gridpoint ID.
-    :param data_frame: pandas dataframe containing a field value and index Grid_Point_ID
-    :param fieldname: string of fieldname to plot
-    :return:
-    """
-    # Assume a roughly continuous data region for now, just plot all datapoints that aren't -999.
-
-    # Take out -999. float values
-    data_frame = data_frame[data_frame[fieldname] != -999.0]
-
-    axes = data_frame.plot.scatter('Grid_Point_ID', fieldname)
-    plt.show()
 
 
 def evaluate_field_diff(smdf1, smdf2, fieldname):
@@ -176,15 +80,15 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     :param fieldname: String fieldname of the data field to compare
     :return:
     """
-    print('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
+    logging.info('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
 
     # Exclude NaN records (reported as fieldname = -999.0)
     frame1 = smdf1[smdf1[fieldname] != -999.0]
     frame2 = smdf2[smdf2[fieldname] != -999.0]
 
     # Print record counts
-    print('Dataset 1 contains {}/{} valid datarows'.format(len(frame1.index), len(smdf1)))
-    print('Dataset 2 contains {}/{} valid datarows'.format(len(frame2.index), len(smdf2)))
+    logging.info('Dataset 1 contains {}/{} valid datarows'.format(len(frame1.index), len(smdf1)))
+    logging.info('Dataset 2 contains {}/{} valid datarows'.format(len(frame2.index), len(smdf2)))
 
     # Get records in common
     common = pd.merge(frame1, frame2, how='inner', on=['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'])
@@ -215,56 +119,14 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     rightonly.drop(fieldname+'_x', axis=1, inplace=True)
     rightonly.drop('_merge', axis=1, inplace=True)
 
-    print('Dataset analysis:')
-    print('{} rows common to both datasets.'.format(len(common.index)))
-    print('{} rows in dataset 1 only.'.format(len(leftonly.index)))
-    print('{} rows in dataset 2 only.'.format(len(rightonly.index)))
+    logging.info('Dataset analysis:')
+    logging.info('{} rows common to both datasets.'.format(len(common.index)))
+    logging.info('{} rows in dataset 1 only.'.format(len(leftonly.index)))
+    logging.info('{} rows in dataset 2 only.'.format(len(rightonly.index)))
 
     # Get records in common that are same/diff
 
-    fig1 = plt.figure()
-    # Set up plot
-    # find a central lon and lat
-    center_lon = common['Longitude'].mean()
-    centre_lat = common['Latitude'].mean()
-
-    # find a min and max lat and long
-    min_lon = common['Longitude'].min() - 4
-    max_lon = common['Longitude'].max() + 4
-
-    min_lat = common['Latitude'].min() - 4
-    max_lat = common['Latitude'].max() + 4
-
-    # for a full orbit?
-    # width=110574 * 90,
-    # height=16 * 10**6
-
-    m = Basemap(projection='poly',
-                llcrnrlon=min_lon,
-                llcrnrlat=min_lat,
-                urcrnrlat=max_lat,
-                urcrnrlon=max_lon,
-                lat_0=centre_lat, lon_0=center_lon,
-                resolution='l')
-
-    m.drawcoastlines()
-    m.fillcontinents()
-    # labels [left, right, top, bottom]
-    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
-    m.drawmeridians(np.arange(-180, 180, 60.), labels=[False, False, False, True], fontsize=8)
-    m.drawmapboundary()
-
-    m.scatter(common['Longitude'].values,
-              common['Latitude'].values,
-              latlon=True,
-              c=common[fieldname+'_Diff'],
-              s=5,
-              zorder=10)
-
-    # add colorbar
-    m.colorbar()
-
-    plt.title("Difference in " + fieldname)
+    plot_sm_difference(common, fieldname=fieldname+'_Diff')
 
     fig2, ax2 = plt.subplots(1)
     # plot each difference against the index grid point id
@@ -277,7 +139,7 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     # plot only the ones with a non-zero difference?
     non_zero_diff = common[common[fieldname+'_Diff'] != 0]
     if non_zero_diff.empty:
-        print('No differences to plot')
+        logging.info('No differences to plot')
     else:
         fig3, ax3 = plt.subplots(1)
         non_zero_diff.plot(x='Grid_Point_ID', y=fieldname+'_Diff', ax=ax3, legend=False,
@@ -289,42 +151,140 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     plt.show()
 
 
+def setup_sm_plot(lat, long):
+    fig1 = plt.figure()
+    # Set up plot
+    # find a central lon and lat
+    centre_lon = long.mean()
+    centre_lat = lat.mean()
+    # find a min and max lat and long
+    min_lon = max(long.min() - 4, -180.)
+    max_lon = min(long.max() + 4, +180.)
+    delta_lon = np.abs(max_lon - min_lon)
+
+    min_lat = max(lat.min() - 4, -90.)
+    max_lat = min(lat.max() + 4, +90.)
+    delta_lat = np.abs(max_lat - min_lat)
+
+    # for a full orbit?
+    # width=110574 * 90,
+    # height=16 * 10**6
+
+    if delta_lat > 45:
+        lat_0 = 10.
+        lon_0 = centre_lon
+        width = 110574 * 70
+        height = 14 * 10 ** 6
+        dot_size = 1
+    else:
+        lat_0 = centre_lat
+        lon_0 = centre_lon
+        width = delta_lon * 110574
+        height = delta_lat * 10 ** 5
+        dot_size = 5
+
+    m = Basemap(
+        # projection='cyl',
+        projection='poly',
+        lat_0=lat_0,
+        lon_0=lon_0,
+        width=width,
+        height=height,
+        resolution='l')
+
+    m.drawcoastlines(linewidth=0.5)
+    m.fillcontinents()
+    # labels [left, right, top, bottom]
+    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
+    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8, rotation=45)
+    m.drawmapboundary()
+
+    return fig1, m, dot_size
+
+
+# Plot a SM orbit from a pandas dataframe
+def plot_sm_orbit(smdf, fieldname='Soil_Moisture'):
+    """
+     Plot the soil moisture orbit. Gives map plots and scatter.
+    
+    :param smdf: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+    :param fieldname: string fieldname of the data field to compare
+    :return:
+    """
+
+    logging.info('Plotting {} orbit...'.format(fieldname))
+    
+    fig, m, dot_size = setup_sm_plot(smdf['Latitude'].values, smdf['Longitude'].values)
+    
+    if fieldname == 'Soil_Moisture':
+        plt.title(fieldname)
+        cmap = 'viridis_r'
+        c = smdf[fieldname]  # geophysical variable to plot
+        vmin = 0.
+        vmax = 1.
+        m.scatter(smdf['Longitude'].values,
+          smdf['Latitude'].values,
+          latlon=True,
+          c=c,
+          s=dot_size,
+          zorder=10,
+          cmap=cmap,
+          vmin=vmin,
+          vmax=vmax,
+          )
+        cbar = m.colorbar()
+        cbar.set_label(r'[m$^3$/m$^3$]')
+
+    else:
+        plt.title(fieldname)
+        cmap = 'viridis'
+        c = smdf[fieldname] # geophysical variable to plot 
+        m.scatter(smdf['Longitude'].values,
+          smdf['Latitude'].values,
+          latlon=True,
+          c=c,
+          s=dot_size,
+          zorder=10,
+          cmap=cmap,
+          )    
+        cbar = m.colorbar()
+
+    plt.show()
+
+
+def plot_sm_difference(smdf, fieldname='Soil_Moisture'):
+    """
+        Plot the difference between two dataframes.
+
+        :param smdf: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+        :param fieldname: string fieldname of the data field to compare
+        :return:
+        """
+    logging.info('Plotting {} ...'.format(fieldname))
+
+    fig, m, dot_size = setup_sm_plot(smdf['Latitude'].values, smdf['Longitude'].values)
+
+    plt.title(fieldname)
+    cmap = 'bwr'
+    c = smdf[fieldname]  # geophysical variable to plot
+    vmin = -1.
+    vmax = +1.
+    m.scatter(smdf['Longitude'].values,
+              smdf['Latitude'].values,
+              latlon=True,
+              c=c,
+              s=dot_size,
+              zorder=10,
+              cmap=cmap,
+              vmin=vmin,
+              vmax=vmax)
+    cbar = m.colorbar()
+
+    plt.show()
+
+
 if __name__ == '__main__':
 
-    # TODO: Reorganise the argparse stuff?
-    parser = argparse.ArgumentParser(description='Read L2SM Processor UDP files')
-    parser.add_argument('--plot-diff', '-d', nargs=2, metavar='FILE',
-                        help='Evaluate and plot the difference between two UDP files.')
-    parser.add_argument('--field-name', '-f', default='Soil_Moisture',
-                        help="Field name to extract and diff. Default 'Soil_Moisture'.")
+    logging.config.dictConfig(logging_config)
 
-    args = parser.parse_args()
-
-    if args.plot_diff:
-        # Requested to plot the difference between two UDP files
-        file1 = os.path.abspath(args.plot_diff[0])
-        file2 = os.path.abspath(args.plot_diff[1])
-        field = args.field_name
-
-        print('UDP file 1: {}'.format(file1))
-        fail = False
-        if not os.path.isfile(file1):
-            print('ERROR: UDP file not found.')
-            fail = True
-        print('UDP file 2: {}'.format(file2))
-        if not os.path.isfile(file2):
-            print('ERROR: UDP file not found.')
-            fail = True
-        if fail:
-            sys.exit(1)
-
-        print('Extracting field: {}.'.format(field))
-
-        dataframe1 = extract_field(read_sm_product(file1), field)
-        dataframe2 = extract_field(read_sm_product(file2), field)
-        evaluate_field_diff(dataframe1, dataframe2, field)
-    else:
-        # For now this is the only possible command
-        print('ERROR: Invalid or no flags given.')
-        print('       Try -h for help.')
-
+    logging.getLogger(__name__)

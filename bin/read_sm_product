@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+"""
+The command line interface for reading and plotting soil moisture products
+
+"""
+
+import argparse
+import os
+import sys
+import logging.config
+from smos_tools import read_sm_product
+from smos_tools.logger.logging_config import logging_config
+
+logging.config.dictConfig(logging_config)
+
+logging.getLogger(__name__)
+
+parser = argparse.ArgumentParser(description="Read and plot L2SM Processor UDP files")
+
+parser.add_argument('--plot-diff', '-d', nargs=2, metavar='FILE',
+                    help='Evaluate and plot the difference between two UDP DBL files for a requested field name.')
+parser.add_argument('--field-name', '-f', default='Soil_Moisture',
+                    help="Field name to extract and plot. Default 'Soil_Moisture'.")
+parser.add_argument('--plot-orbit', '-o', nargs=1, metavar='FILE',
+                    help='Plot soil moisture orbit from UDP file for a requested field name.')
+
+args = parser.parse_args()
+
+if args.plot_diff:
+
+    # Requested to plot the difference between two UDP files
+    file1 = os.path.abspath(args.plot_diff[0])
+    file2 = os.path.abspath(args.plot_diff[1])
+    field = args.field_name
+
+    print('UDP file 1: {}'.format(file1))
+    fail = False
+    if not os.path.isfile(file1):
+        print('ERROR: UDP file not found.')
+        fail = True
+    print('UDP file 2: {}'.format(file2))
+    if not os.path.isfile(file2):
+        print('ERROR: UDP file not found.')
+        fail = True
+    if fail:
+        sys.exit(1)
+
+    # check these files are for the same orbit, else error
+    head, tail1 = os.path.split(file1)
+    head, tail2 = os.path.split(file2)
+
+    if tail1 != tail2:
+        print('ERROR: UDP1 and UDP2 are not for the same orbit!')
+        sys.exit(1)
+    print('Extracting field: {}.'.format(field))
+
+    dataframe1 = read_sm_product.extract_field(read_sm_product.read_sm_product(file1), field)
+    dataframe2 = read_sm_product.extract_field(read_sm_product.read_sm_product(file2), field)
+    read_sm_product.evaluate_field_diff(dataframe1, dataframe2, field)
+
+elif args.plot_orbit:
+    # Requested to plot the SM values for the specific orbit
+    filename = os.path.abspath(args.plot_orbit[0])
+    field = args.field_name
+    print('UDP file: {}'.format(filename))
+
+    fail = False
+    if not os.path.isfile(filename):
+        print('ERROR: UDP file not found.')
+        fail = True
+    if fail:
+        sys.exit(1)
+    print('Extracting field: {}.'.format(field))
+    dataframe = read_sm_product.extract_field(read_sm_product.read_sm_product(filename), field)
+
+    read_sm_product.plot_sm_orbit(dataframe, fieldname=field)
+else:
+    # For now this is the only possible command
+    print('ERROR: Invalid or no flags given.')
+    print('       Try -h for help.')
