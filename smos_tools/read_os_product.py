@@ -35,7 +35,7 @@ def read_os_udp(filename):
     return data
 
     
-def extract_field(data, fieldname):
+def extract_field(data, fieldname='SSS1'):
     """
     Converts the structured array into a pandas small dataframe.
 
@@ -45,7 +45,11 @@ def extract_field(data, fieldname):
     Mean_acq_time is expressed in UTC decimal days (MJD2000 reference).
     """
 
+    # NOTE there is a difference between how OS and SM handle mean acquisition time.
+    # For OS this is a float expressed in UTC decimal days (in MJD2000) reference,
+    # while for SM this has already been split into Days, seconds and microseconds
     time_frame = pd.DataFrame(data['Geophysical_Parameters_Data']['Mean_acq_time'], columns=['Mean_acq_time'])
+    gridpoint_id_frame = pd.DataFrame(data['Grid_Point_Data']['Grid_Point_ID'], columns=['Grid_Point_ID'])
     lat_frame = pd.DataFrame(data['Grid_Point_Data']['Latitude'], columns=['Latitude'])
     lon_frame = pd.DataFrame(data['Grid_Point_Data']['Longitude'], columns=['Longitude'])
 
@@ -63,7 +67,9 @@ def extract_field(data, fieldname):
 
     field_frame = pd.DataFrame(data[dict_part][fieldname], columns=[fieldname])
 
-    dataframe = pd.concat([time_frame, lat_frame, lon_frame, field_frame], axis=1)
+    dataframe = pd.concat([time_frame,
+                           gridpoint_id_frame, lat_frame, lon_frame, field_frame], axis=1)
+
     dataframe = dataframe.replace(-999, np.NaN)
     dataframe.dropna(axis=0, inplace=True)
     
@@ -157,7 +163,7 @@ def plot_os_orbit(os_df, fieldname='SSS1'):
     elif fieldname == 'SSS3':  # SSS anomaly
         plt.title('SSS anomaly')
         cmap = 'bwr'
-        c = os_df[fieldname] # geophysical variable to plot
+        c = os_df[fieldname]  # geophysical variable to plot
         vmin = -0.5
         vmax = +0.5
         m.scatter(os_df['Longitude'].values,
@@ -196,7 +202,7 @@ def plot_os_difference(os_df, fieldname='SSS1'):
         :return:
         """
 
-    logging.info('Plotting {} difference...'.format(fieldname))
+    logging.info('Plotting {} ...'.format(fieldname))
 
     figure, m, dot_size = setup_os_plot(os_df['Latitude'].values, os_df['Longitude'].values)
 
@@ -216,11 +222,101 @@ def plot_os_difference(os_df, fieldname='SSS1'):
               vmax=vmax)
     cbar = m.colorbar()
 
-    plt.show()   
-    
+    plt.show()
+
+
+def evaluate_field_diff(frame1, frame2, fieldname='SSS1'):
+    """
+    Plot the difference between two dataframes for a given field. Gives map plots and scatter.
+    :param frame1: pandas dataframe containing the requested data field and index (Days, Seconds, Microseconds, Grid_Point_ID)
+    :param frame2: pandas dataframe containing the requested data field and index (Days, Seconds, Microseconds, Grid_Point_ID)
+    :param fieldname: String fieldname of the data field to compare
+    :return:
+    """
+    logging.info('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
+
+    # Print record counts
+    logging.info('Dataset 1 contains {} valid datarows'.format(len(frame1.index)))
+    logging.info('Dataset 2 contains {} valid datarows'.format(len(frame2.index)))
+
+    # Get records in common
+    common = pd.merge(frame1, frame2, how='inner', on=['Mean_acq_time', 'Grid_Point_ID'])
+    common.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude'}, inplace=True)
+    common.drop('Latitude_y', axis=1, inplace=True)
+    common.drop('Longitude_y', axis=1, inplace=True)
+    common[fieldname + '_Diff'] = common[fieldname + '_y'] - common[fieldname + '_x']
+    common.reset_index(inplace=True)
+
+    # Outer merge ready for getting new records
+    outer = pd.merge(frame1, frame2, how='outer', on=['Mean_acq_time', 'Grid_Point_ID'],
+                     indicator=True)
+    # Get records in 1 but not 2
+    leftonly = outer[outer['_merge'] == 'left_only'].copy()
+    leftonly.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude', fieldname + '_x': fieldname},
+                    inplace=True)
+    leftonly.drop('Latitude_y', axis=1, inplace=True)
+    leftonly.drop('Longitude_y', axis=1, inplace=True)
+    leftonly.drop(fieldname + '_y', axis=1, inplace=True)
+    leftonly.drop('_merge', axis=1, inplace=True)
+
+    # Get records in 2 but not 1
+    rightonly = outer[outer['_merge'] == 'right_only'].copy()
+    rightonly.rename(columns={'Latitude_x': 'Latitude', 'Longitude_x': 'Longitude', fieldname + '_y': fieldname},
+                     inplace=True)
+    rightonly.drop('Latitude_y', axis=1, inplace=True)
+    rightonly.drop('Longitude_y', axis=1, inplace=True)
+    rightonly.drop(fieldname + '_x', axis=1, inplace=True)
+    rightonly.drop('_merge', axis=1, inplace=True)
+
+    logging.info('Dataset analysis:')
+    logging.info('{} rows common to both datasets.'.format(len(common.index)))
+    logging.info('{} rows in dataset 1 only.'.format(len(leftonly.index)))
+    logging.info('{} rows in dataset 2 only.'.format(len(rightonly.index)))
+
+    # Get records in common that are same/diff
+
+    plot_os_difference(common, fieldname=fieldname + '_Diff')
+
+    fig2, ax2 = plt.subplots(1)
+    # plot each difference against the index grid point id
+    common.plot(x='Grid_Point_ID', y=fieldname + '_Diff', ax=ax2, legend=False, rot=90,
+                fontsize=8, clip_on=False, style='o')
+    ax2.set_ylabel(fieldname + ' Diff')
+    ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
+    fig2.tight_layout()
+
+    # plot only the ones with a non-zero difference?
+    non_zero_diff = common[common[fieldname + '_Diff'] != 0]
+    if non_zero_diff.empty:
+        logging.info('No differences to plot')
+    else:
+        fig3, ax3 = plt.subplots(1)
+        non_zero_diff.plot(x='Grid_Point_ID', y=fieldname + '_Diff', ax=ax3, legend=False,
+                           rot=90, fontsize=8, clip_on=False, style='o')
+        ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
+        ax3.set_ylabel(fieldname + ' Diff')
+        fig3.tight_layout()
+
+    plt.show()
+
 
 if __name__ == '__main__':
 
     logging.config.dictConfig(logging_config)
 
     logging.getLogger(__name__)
+
+    udp1 = '/home/rdavies/workspace/v670/test_data_v670/v670/' \
+           'SM_TEST_MIR_OSUDP2_20140402T010641_20140402T015956_670_001_8/' \
+           'SM_TEST_MIR_OSUDP2_20140402T010641_20140402T015956_670_001_8.DBL'
+
+    udp2 = udp1
+
+    data1 = read_os_udp(udp1)
+    data2 = read_os_udp(udp2)
+
+    frame1 = extract_field(data1)
+    frame2 = extract_field(data2)
+
+    evaluate_field_diff(frame1, frame2, 'SSS1')
+
