@@ -15,7 +15,7 @@ setup(name='smos_tools',
                      'smos_tools/data/SM_TEST_MIR_SMUDP2_20150721T102717_20150721T112036_650_001_9.HDR']
                     },
       include_package_data=True,
-      scripts=['bin/read_sm_product'],
+      scripts=['bin/read_sm_product', 'bin/read_os_product'],
       zip_safe=False,
       install_requires=[
           'numpy',
