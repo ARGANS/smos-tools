@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='smos_tools',
-      version='0.1',
+      version='1.0.0',
       description='Some open source tools for SMOS',
       url='https://www.argans.co.uk',
       author='ARGANS',
