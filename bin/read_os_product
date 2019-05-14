@@ -18,11 +18,11 @@ logging.getLogger(__name__)
 parser = argparse.ArgumentParser(description="Read and plot L2OS Processor UDP files")
 
 parser.add_argument('--plot-diff', '-d', nargs=2, metavar='FILE',
-                    help='Evaluate and plot the difference between two UDP DBL files.')
+                    help='Evaluate and plot the difference between two UDP DBL files for a requested field name.')
 parser.add_argument('--field-name', '-f', default='SSS1',
-                    help="Field name to extract and diff. Default 'SSS1'.")
-parser.add_argument('--plot-orb', '-o', nargs=1, metavar='FILE',
-                    help='Plot ocean salinity orbit from UDP file.')
+                    help="Field name to extract and plot. Default 'SSS1'.")
+parser.add_argument('--plot-orbit', '-o', nargs=1, metavar='FILE',
+                    help='Plot ocean salinity orbit from UDP file for a requested field name.')
 
 args = parser.parse_args()
 
@@ -59,9 +59,9 @@ if args.plot_diff:
 
     read_os_product.evaluate_field_diff(dataframe1, dataframe2, field)
 
-elif args.plot_orb:
+elif args.plot_orbit:
     # Requested to plot the OS values for the specific orbit
-    filename = os.path.abspath(args.plot_orb[0])
+    filename = os.path.abspath(args.plot_orbit[0])
     field = args.field_name
     print('UDP file: {}'.format(filename))
 

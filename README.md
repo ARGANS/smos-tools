@@ -22,35 +22,36 @@ To build, `cd` to the same directory as the `setup.py` and then run
 
 Then (preferably not in the conda environment you are using to develop this)
 
-`cd dist`
+`cd dist && pip install smos_tools-0.1-py3-none-any.whl`
 
-`pip install smos_tools-0.1-py3-none-any.whl` 
+## Usage
 
-## Command line utilities
+The following command line utilities are provided in `bin/`, and should be
+automatically added to your path during install.
 
-##### read_os_product
+### read_os_product
 
-Utility to read and plot L2OS UDP files.
+Utility to read and plot L2OS `UDP` files.
 
 The options are:
 
-- `--plot-diff FILE FILE` `-d FILE FILE` : Evaluate the and plot the difference between two `UDP` `DBL` files.
-- `--field-name NAME` `-f NAME` : Field name to plot. Default is `SSS1`.
-- `--plot-orb FILE` `-o FILE` : Plot the Ocean Salinity orbit from UDP file. 
+- `--plot-diff FILE FILE`, `-d FILE FILE` : Evaluate the and plot the difference between two `UDP` `DBL` files.
+- `--field-name NAME`, `-f NAME` : Field name to plot. Default is `SSS1`.
+- `--plot-orbit FILE`, `-o FILE` : Plot the Ocean Salinity orbit from `UDP` file.
 
 Example usage:
 
 `$ read_os_product -o /data/SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_670_001_0/SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_670_001_0.DBL`
 
-##### read_sm_product
+### read_sm_product
 
-Utility to read and plot L2SM UDP files.
+Utility to read and plot L2SM `UDP` files.
 
 The options are:
 
-- `--plot-diff FILE FILE` `-d FILE FILE` : Evaluate the and plot the difference between two `UDP` `DBL` files.
-- `--field-name NAME` `-f NAME` : Field name to plot. Default is `Soil_Moisture`.
-- `--plot-orb FILE` `-o FILE` : Plot the Soil Moisture orbit from UDP file. 
+- `--plot-diff FILE FILE`, `-d FILE FILE` : Evaluate the and plot the difference between two `UDP` `DBL` files.
+- `--field-name NAME`, `-f NAME` : Field name to plot. Default is `Soil_Moisture`.
+- `--plot-orbit FILE`, `-o FILE` : Plot the Soil Moisture orbit from `UDP` file.
 
 Example usage:
 
