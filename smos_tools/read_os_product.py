@@ -8,7 +8,7 @@ import logging
 import logging.config
 import os
 
-from smos_tools.data_types.os_udp_datatype import datatype
+from smos_tools.data_types.os_udp_datatype import datatype, science_flags_dtype, control_flags_dtype
 from smos_tools.logger.logging_config import logging_config
 
 
@@ -34,7 +34,47 @@ def read_os_udp(filename):
     
     return data
 
-    
+
+def unpack_control_flags(control_flag_data):
+    """
+    Unpacks the control flags into a numpy structured array so they can be made into a dataframe later
+
+    :param control_flag_data: A control flag part of the data from read_os_udp
+    :return: a numpy structured array
+    """
+
+    # Make the empty array with the right dtype for the data
+
+    unpacked_flags = np.empty((len(control_flag_data)), dtype=control_flags_dtype)
+
+    # unpack from Least Significant Bit
+
+    for position in range(0, len(control_flags_dtype)):
+        unpacked_flags[control_flags_dtype[position][0]] = (control_flag_data >> position) & 1
+
+    return unpacked_flags
+
+
+def unpack_science_flags(science_flag_data):
+    """
+    Unpacks the control flags into a numpy structured array so they can be made into a dataframe later
+
+    :param science_flag_data: A science flag part of the data from read_os_udp
+    :return: a numpy structured array
+    """
+
+    # Make the empty array with the right dtype for the data
+
+    unpacked_flags = np.empty((len(science_flag_data)), dtype=science_flags_dtype)
+
+    # unpack from Least Significant Bit
+
+    for position in range(0, len(science_flags_dtype)):
+        unpacked_flags[science_flags_dtype[position][0]] = (science_flag_data >> position) & 1
+
+    return unpacked_flags
+
+
 def extract_field(data, fieldname='SSS1'):
     """
     Converts the structured array into a pandas small dataframe.
@@ -313,10 +353,10 @@ if __name__ == '__main__':
     udp2 = udp1
 
     data1 = read_os_udp(udp1)
-    data2 = read_os_udp(udp2)
 
-    frame1 = extract_field(data1)
-    frame2 = extract_field(data2)
+    c_flags = unpack_control_flags(data1['Control_Flags_1'])
+    s_flags = unpack_science_flags(data1['Science_Flags_1'])
 
-    evaluate_field_diff(frame1, frame2, 'SSS1')
+    print(c_flags)
+    print(s_flags)
 
