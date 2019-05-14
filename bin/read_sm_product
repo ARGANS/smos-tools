@@ -27,9 +27,19 @@ parser.add_argument('--plot-orb', '-o', nargs=1, metavar='FILE',
 args = parser.parse_args()
 
 if args.plot_diff:
+
     # Requested to plot the difference between two UDP files
     file1 = os.path.abspath(args.plot_diff[0])
     file2 = os.path.abspath(args.plot_diff[1])
+
+    # check these files are for the same orbit, else error
+    head, tail1 = os.path.split(file1)
+    head, tail2 = os.path.split(file2)
+
+    if tail1 != tail2:
+        print('ERROR: UDP1 and UDP2 are not for the same orbit!')
+        sys.exit(1)
+
     field = args.field_name
 
     print('UDP file 1: {}'.format(file1))

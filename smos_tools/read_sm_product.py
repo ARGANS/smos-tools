@@ -72,7 +72,6 @@ def extract_field(data, fieldname):
     return extracted_data
 
 
-# Plot difference between 2 dataframes containing soil moisture
 def evaluate_field_diff(smdf1, smdf2, fieldname):
     """
     Plot the difference between two dataframes for a given field. Gives map plots and scatter.
@@ -261,7 +260,7 @@ def plot_sm_difference(smdf, fieldname='Soil_Moisture'):
         :param fieldname: string fieldname of the data field to compare
         :return:
         """
-    logging.info('Plotting {} difference ...'.format(fieldname))
+    logging.info('Plotting {} ...'.format(fieldname))
 
     fig, m, dot_size = setup_sm_plot(smdf['Latitude'].values, smdf['Longitude'].values)
 
