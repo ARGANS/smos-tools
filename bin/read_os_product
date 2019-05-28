@@ -49,7 +49,7 @@ if args.plot_diff:
     head, tail1 = os.path.split(file1)
     head, tail2 = os.path.split(file2)
 
-    if tail1 != tail2:
+    if tail1[19:34] != tail2[19:34]:
         print('ERROR: UDP1 and UDP2 are not for the same orbit!')
         sys.exit(1)
     print('Extracting field: {}.'.format(field))
