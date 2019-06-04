@@ -173,7 +173,7 @@ def setup_os_plot(lat, long):
     return fig1, m, dot_size
 
 
-def plot_os_orbit(os_df, fieldname='SSS1'):
+def plot_os_orbit(os_df, fieldname='SSS1', vmin=None, vmax=None):
     """
     Plot the ocean salinity UDP field fieldname.
     
@@ -190,8 +190,10 @@ def plot_os_orbit(os_df, fieldname='SSS1'):
         plt.title(fieldname)
         cmap = 'viridis'
         c = os_df[fieldname]  # geophysical variable to plot
-        vmin = 32.
-        vmax = 38.
+        if vmin == None:
+            vmin = 32.
+        if vmax == None:
+            vmax = 38.
         m.scatter(os_df['Longitude'].values,
                   os_df['Latitude'].values,
                   latlon=True,
@@ -209,8 +211,10 @@ def plot_os_orbit(os_df, fieldname='SSS1'):
         plt.title('SSS anomaly')
         cmap = 'bwr'
         c = os_df[fieldname]  # geophysical variable to plot
-        vmin = -0.5
-        vmax = +0.5
+        if vmin == None:
+            vmin = -0.5
+        if  vmax== None:
+            vmax = +0.5
         m.scatter(os_df['Longitude'].values,
                   os_df['Latitude'].values,
                   latlon=True,
@@ -373,8 +377,8 @@ if __name__ == '__main__':
     df2 = extract_field(data2)
     #print(df2)
 
-    evaluate_field_diff(df1, df2, fieldname='SSS1', vmin=-0.001, vmax=0.001, xaxis='Latitude')
-
+    #evaluate_field_diff(df1, df2, fieldname='SSS1', vmin=-0.001, vmax=0.001, xaxis='Latitude')
+    plot_os_orbit(df2, fieldname='SSS1', vmin=33, vmax=37)
     import sys
     sys.exit(0)
 
