@@ -23,6 +23,9 @@ parser.add_argument('--field-name', '-f', default='SSS1',
                     help="Field name to extract and plot. Default 'SSS1'.")
 parser.add_argument('--plot-orbit', '-o', nargs=1, metavar='FILE',
                     help='Plot ocean salinity orbit from UDP file for a requested field name.')
+#parser.add_argument('--vmin', '-m', default=-1, help="Minimum value before saturation.")
+#parser.add_argument('--vmax', '-M', default=-1, help="Maximum value before saturation.")
+#parser.add_argument('--x-axis', '-x', default='Latitude', help="Abscissas over wich to plot the filedname. One of: {'Latitude', 'Grid_Point_ID'}.")
 
 args = parser.parse_args()
 
@@ -52,8 +55,16 @@ if args.plot_diff:
     if tail1[19:34] != tail2[19:34]:
         print('ERROR: UDP1 and UDP2 are not for the same orbit!')
         sys.exit(1)
+   
+    # check the files are udp files
+    if os.path.basename(file1)[14:17] != 'UDP':
+        print('ERROR: First file is not a UDP file.')
+        sys.exit(1)
+    if os.path.basename(file2)[14:17] != 'UDP':    
+        print('ERROR: Second file is not a UDP file.')    
+        sys.exit(1) 
     print('Extracting field: {}.'.format(field))
-
+    
     dataframe1 = read_os_product.extract_field(read_os_product.read_os_udp(file1), field)
     dataframe2 = read_os_product.extract_field(read_os_product.read_os_udp(file2), field)
 
