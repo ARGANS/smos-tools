@@ -281,7 +281,7 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1', vmin=-1, vmax=+1, xaxi
     :param fieldname: String fieldname of the data field to compare
     :param vmin: Minimum value visible on plot. Lower values saturate.
     :param vmax: Maximum value visible on plot. Higher values saturate.
-    :param xaxis: Varible againt which the variable is plotted.
+    :param xaxis: Varible againt which the fieldname is plotted. One of: {'Latitude', 'Grid_Point_ID'}
     :return:
     """
     logging.info('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
