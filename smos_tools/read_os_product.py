@@ -19,6 +19,11 @@ def read_os_udp(filename):
     :param filename: path to .DBL file
     :return: numpy structured array
     """
+    # check the files are udp files
+    if os.path.basename(filename)[14:17] != 'UDP':
+        logging.exception('{} is not a UDP file'.format(filename))
+        raise
+
     try:
         file = open(filename, 'rb')
     except IOError:
@@ -346,17 +351,29 @@ if __name__ == '__main__':
 
     logging.getLogger(__name__)
 
-    udp1 = '/home/rdavies/workspace/v670/test_data_v670/v670/' \
-           'SM_TEST_MIR_OSUDP2_20140402T010641_20140402T015956_670_001_8/' \
-           'SM_TEST_MIR_OSUDP2_20140402T010641_20140402T015956_670_001_8.DBL'
+    udp1 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_ref/' \
+            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0/' \
+            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0.DBL'
 
-    udp2 = udp1
+    udp2 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_v673/' \
+            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0/' \
+            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0.DBL'
+    print('==========')
+    print(os.path.basename(udp1)[14:17])
+    print(os.path.basename(udp1))
+    print('==========')
 
     data1 = read_os_udp(udp1)
+    df1 = extract_field(data1)
+    #print(df1)
 
-    c_flags = unpack_control_flags(data1['Control_Flags_1'])
-    s_flags = unpack_science_flags(data1['Science_Flags_1'])
+    data2 = read_os_udp(udp2)
+    df2 = extract_field(data2)
+    #print(df2)
 
-    print(c_flags)
-    print(s_flags)
+    evaluate_field_diff(df1, df2, fieldname='SSS1')
+
+    import sys
+    sys.exit(0)
+
 
