@@ -78,7 +78,7 @@ elif args.plot_orbit:
     print('Extracting field: {}.'.format(field))
     dataframe = read_os_product.extract_field(read_os_product.read_os_udp(filename), field)
 
-    read_os_product.plot_os_orbit(dataframe, fieldname=field)
+    read_os_product.plot_os_orbit(dataframe, fieldname=field, vmin=args.vmin, vmax=args.vmax)
 else:
     # For now this is the only possible command
     print('ERROR: Invalid or no flags given.')
