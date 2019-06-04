@@ -238,7 +238,7 @@ def plot_os_orbit(os_df, fieldname='SSS1'):
     plt.show()
 
 
-def plot_os_difference(os_df, fieldname='SSS1'):
+def plot_os_difference(os_df, fieldname='SSS1', vmin=-1, vmax=+1):
     """
         Plot the ocean salinity UDP difference for fieldname.
 
@@ -254,8 +254,7 @@ def plot_os_difference(os_df, fieldname='SSS1'):
     plt.title(fieldname)
     cmap = 'bwr'
     c = os_df[fieldname]  # geophysical variable to plot
-    vmin = -1.
-    vmax = +1.
+
     m.scatter(os_df['Longitude'].values,
               os_df['Latitude'].values,
               latlon=True,
@@ -270,12 +269,15 @@ def plot_os_difference(os_df, fieldname='SSS1'):
     plt.show()
 
 
-def evaluate_field_diff(frame1, frame2, fieldname='SSS1'):
+def evaluate_field_diff(frame1, frame2, fieldname='SSS1', vmin=-1, vmax=+1, xaxis='Latitude'):
     """
     Plot the difference between two dataframes for a given field. Gives map plots and scatter.
     :param frame1: pandas dataframe containing the requested data field and index (Days, Seconds, Microseconds, Grid_Point_ID)
     :param frame2: pandas dataframe containing the requested data field and index (Days, Seconds, Microseconds, Grid_Point_ID)
     :param fieldname: String fieldname of the data field to compare
+    :param vmin: Minimum value visible on plot. Lower values saturate.
+    :param vmax: Maximum value visible on plot. Higher values saturate.
+    :param xaxis: Varible againt which the variable is plotted.
     :return:
     """
     logging.info('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
@@ -320,11 +322,11 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1'):
 
     # Get records in common that are same/diff
 
-    plot_os_difference(common, fieldname=fieldname + '_Diff')
+    plot_os_difference(common, fieldname=fieldname + '_Diff', vmin=vmin, vmax=vmax)
 
     fig2, ax2 = plt.subplots(1)
     # plot each difference against the index grid point id
-    common.plot(x='Grid_Point_ID', y=fieldname + '_Diff', ax=ax2, legend=False, rot=90,
+    common.plot(x=xaxis, y=fieldname + '_Diff', ax=ax2, legend=False, rot=90,
                 fontsize=8, clip_on=False, style='o')
     ax2.set_ylabel(fieldname + ' Diff')
     ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
@@ -336,7 +338,7 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1'):
         logging.info('No differences to plot')
     else:
         fig3, ax3 = plt.subplots(1)
-        non_zero_diff.plot(x='Grid_Point_ID', y=fieldname + '_Diff', ax=ax3, legend=False,
+        non_zero_diff.plot(x=xaxis, y=fieldname + '_Diff', ax=ax3, legend=False,
                            rot=90, fontsize=8, clip_on=False, style='o')
         ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
         ax3.set_ylabel(fieldname + ' Diff')
@@ -352,12 +354,12 @@ if __name__ == '__main__':
     logging.getLogger(__name__)
 
     udp1 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_ref/' \
-            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0/' \
-            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0.DBL'
+        'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0/' \
+        'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0.DBL'
 
     udp2 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_v673/' \
-            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0/' \
-            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0.DBL'
+        'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0/' \
+        'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0.DBL'
     print('==========')
     print(os.path.basename(udp1)[14:17])
     print(os.path.basename(udp1))
@@ -371,7 +373,7 @@ if __name__ == '__main__':
     df2 = extract_field(data2)
     #print(df2)
 
-    evaluate_field_diff(df1, df2, fieldname='SSS1')
+    evaluate_field_diff(df1, df2, fieldname='SSS1', vmin=-0.001, vmax=0.001, xaxis='Latitude')
 
     import sys
     sys.exit(0)
