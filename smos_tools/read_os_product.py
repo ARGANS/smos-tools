@@ -353,7 +353,7 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1', vmin=-1, vmax=+1, xaxi
     plt.show()
 
 
-def plot_os_histogram(df, num_bins=100, fieldname='SSS1'):
+def plot_os_histogram(df, num_bins=201, fieldname='SSS1'):
     """
     Plots the histogram of the variable in df.
 
