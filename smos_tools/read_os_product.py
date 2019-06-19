@@ -317,6 +317,8 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1'):
 
     plot_os_difference(common, fieldname=fieldname + '_Diff')
 
+    plot_os_histogram(common, fieldname=fieldname + '_Diff')
+
     fig2, ax2 = plt.subplots(1)
     # plot each difference against the index grid point id
     common.plot(x='Grid_Point_ID', y=fieldname + '_Diff', ax=ax2, legend=False, rot=90,
@@ -340,23 +342,66 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1'):
     plt.show()
 
 
+def plot_os_histogram(df, num_bins=100, fieldname='SSS1'):
+    """
+    Plots the histogram of the variable in df.
+
+    :param df: dataframe
+    :param num_bins: number of bins in the histogram.
+    :return: a plot of the histogram
+    """
+    logging.info('Making histogram...')
+    plt.figure()
+    df[fieldname].plot.hist(bins=num_bins)
+    plt.title(fieldname)
+    plt.show()
+
+    print('mean: ', df[fieldname].mean())
+    print('median: ', df[fieldname].median())
+    print('std :', df[fieldname].std())
+
+
 if __name__ == '__main__':
 
     logging.config.dictConfig(logging_config)
-
     logging.getLogger(__name__)
 
-    udp1 = '/home/rdavies/workspace/v670/test_data_v670/v670/' \
-           'SM_TEST_MIR_OSUDP2_20140402T010641_20140402T015956_670_001_8/' \
-           'SM_TEST_MIR_OSUDP2_20140402T010641_20140402T015956_670_001_8.DBL'
+    udp1 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_ref/' \
+            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0/' \
+            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0.DBL'
 
-    udp2 = udp1
+    udp2 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_v673/' \
+            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0/' \
+            'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0.DBL'
 
     data1 = read_os_udp(udp1)
+    data2 = read_os_udp(udp2)
 
-    c_flags = unpack_control_flags(data1['Control_Flags_1'])
-    s_flags = unpack_science_flags(data1['Science_Flags_1'])
+    df1 = extract_field(data1)
+    df2 = extract_field(data2)
+    evaluate_field_diff(df1, df2)
 
-    print(c_flags)
-    print(s_flags)
+    # diff = df1 - df2
+    # df = diff
+    # diff = diff['SSS1']
+    # # hist = diff.hist(bins=100)
+
+    #evaluate_field_diff(df1, df2)
+
+    #plot_histogram(df, num_bins=100, fieldname='SSS1')
+
+    # plt.figure()
+    # ax = diff.plot.hist(bins=500)
+    # plt.title('SSS1(v671)-SSS(v673)\n' +'{}'.format(os.path.basename(udp1)[19:50]))
+    # plt.show()
+    #
+    # print('mean: ', diff.mean())
+    # print('median: ', diff.median())
+    # print('std :', diff.std())
+
+    # plt.figure()
+    # plt.hist(diff)
+    # plt.show()
+
+
 
