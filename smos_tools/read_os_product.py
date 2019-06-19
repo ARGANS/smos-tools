@@ -328,6 +328,8 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1', vmin=-1, vmax=+1, xaxi
 
     plot_os_difference(common, fieldname=fieldname + '_Diff', vmin=vmin, vmax=vmax)
 
+    plot_os_histogram(common, fieldname=fieldname + '_Diff')
+
     fig2, ax2 = plt.subplots(1)
     # plot each difference against the index grid point id
     common.plot(x=xaxis, y=fieldname + '_Diff', ax=ax2, legend=False, rot=90,
@@ -351,10 +353,28 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1', vmin=-1, vmax=+1, xaxi
     plt.show()
 
 
+def plot_os_histogram(df, num_bins=100, fieldname='SSS1'):
+    """
+    Plots the histogram of the variable in df.
+
+    :param df: dataframe
+    :param num_bins: number of bins in the histogram.
+    :return: a plot of the histogram
+    """
+    logging.info('Making histogram...')
+    plt.figure()
+    df[fieldname].plot.hist(bins=num_bins)
+    plt.title(fieldname)
+    plt.show()
+
+    print('mean: ', df[fieldname].mean())
+    print('median: ', df[fieldname].median())
+    print('std :', df[fieldname].std())
+
+
 if __name__ == '__main__':
 
     logging.config.dictConfig(logging_config)
-
     logging.getLogger(__name__)
 
     udp1 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_ref/' \
@@ -380,6 +400,4 @@ if __name__ == '__main__':
     #evaluate_field_diff(df1, df2, fieldname='SSS1', vmin=-0.001, vmax=0.001, xaxis='Latitude')
     plot_os_orbit(df2, fieldname='SSS1', vmin=33, vmax=37)
     import sys
-    sys.exit(0)
-
 
