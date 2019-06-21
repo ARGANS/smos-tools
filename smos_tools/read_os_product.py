@@ -6,10 +6,11 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import logging
 import logging.config
+from smos_tools.logger.logging_config import logging_config
 import os
 
 from smos_tools.data_types.os_udp_datatype import datatype, science_flags_dtype, control_flags_dtype
-from smos_tools.logger.logging_config import logging_config
+
 
 
 def read_os_udp(filename):
@@ -346,17 +347,15 @@ if __name__ == '__main__':
 
     logging.getLogger(__name__)
 
-    udp1 = '/home/rdavies/workspace/v670/test_data_v670/v670/' \
-           'SM_TEST_MIR_OSUDP2_20140402T010641_20140402T015956_670_001_8/' \
-           'SM_TEST_MIR_OSUDP2_20140402T010641_20140402T015956_670_001_8.DBL'
+    udp1 = '/home/rdavies/workspace/SMOS_processor/Outputs/' \
+           'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0/' \
+           'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0.DBL'
 
-    udp2 = udp1
+    # udp2 = udp1
 
     data1 = read_os_udp(udp1)
+    sss = extract_field(data1, 'SSS1')
+    plot_os_orbit(sss)
 
-    c_flags = unpack_control_flags(data1['Control_Flags_1'])
-    s_flags = unpack_science_flags(data1['Science_Flags_1'])
 
-    print(c_flags)
-    print(s_flags)
 
