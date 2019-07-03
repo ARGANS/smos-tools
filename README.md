@@ -16,13 +16,17 @@ Required packages:
 
 ## Installing
 
-To build, `cd` to the same directory as the `setup.py` and then run
+Uninstall any previous version of SMOS Tools you may have installed with
+
+`pip uninstall smos_tools`
+
+To build, `cd` to the root directory containing the `setup.py` and then run
 
 `python setup.py bdist_wheel`
 
 Then (preferably not in the conda environment you are using to develop this)
 
-`cd dist && pip install smos_tools-0.1-py3-none-any.whl`
+`cd dist && pip install smos_tools-1.0.1-py3-none-any.whl`
 
 ## Usage
 
