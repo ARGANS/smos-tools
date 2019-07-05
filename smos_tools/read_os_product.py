@@ -110,7 +110,10 @@ def extract_field(data, fieldname='SSS1'):
                       "'Geophysical_Parameters_Data' or 'Product_Confidence_Descriptors'".format(fieldname))
         raise KeyError("{} not in Geophysical_Parameters_Data or Product_Confidence_Descriptors".format(fieldname))
 
-    field_frame = pd.DataFrame(data[dict_part][fieldname], columns=[fieldname])
+    if fieldname in ['Dg_chi2_1', 'Dg_chi2_2']:
+        field_frame = pd.DataFrame(data[dict_part][fieldname]/100., columns=[fieldname])
+    else:
+        field_frame = pd.DataFrame(data[dict_part][fieldname], columns=[fieldname])
 
     dataframe = pd.concat([time_frame,
                            gridpoint_id_frame, lat_frame, lon_frame, field_frame], axis=1)
@@ -118,6 +121,51 @@ def extract_field(data, fieldname='SSS1'):
     dataframe = dataframe.replace(-999, np.NaN)
     dataframe.dropna(axis=0, inplace=True)
     
+    return dataframe
+
+
+def extract_interpolated_field(data, field='SSS1', latmin=-90, latmax=90, lonmin=-180, lonmax=180, delta=0.25, dist_threshold=0.25):
+    """
+    Interpolates a given geophysical field of the udp file over a regular grid, according to nearest neighbour.
+
+    :param data: structured array from udp file.
+    :param field: one field name among the geophysical parameters of the udp structured array
+    :param latmin: minimum latitude of the regular grid
+    :param latmax: maximum latitude of the regular grid
+    :param lonmin: minimum longitude of the regular grid
+    :param lonmax: maximum longitude of the regular grid
+    :param delta: distance in degrees between two points on the regular grid
+    :param dist_threshold: maximum distance accepted for nearest neighbour interpolation
+    :return: data frame with lat, lon, field value
+    """
+
+    lats = np.arange(latmin, latmax, delta)
+    lons = np.arange(lonmin, lonmax, delta)
+
+    field_out = []
+    lats_out = []
+    lons_out = []
+    dist_threshold = 0.25  # threshold ditance value for nearest interpolation (in degrees)
+    for index_value, value in enumerate(data['Geophysical_Parameters_Data'][field]):
+
+        if value != -999.:
+
+            i_lat = np.argmin(np.abs(lats - data['Grid_Point_Data']['Latitude'][index_value]))
+            i_lon = np.argmin(np.abs(lons - data['Grid_Point_Data']['Longitude'][index_value]))
+
+            if (np.min(np.abs(lats - data['Grid_Point_Data']['Latitude'][index_value])) < dist_threshold) & \
+               (np.min(np.abs(lons - data['Grid_Point_Data']['Longitude'][index_value])) < dist_threshold):
+
+                field_out.append(value)
+                lats_out.append(lats[i_lat])
+                lons_out.append(lons[i_lon])
+
+    lat_frame = pd.DataFrame(lats_out, columns=['Latitude'])
+    lon_frame = pd.DataFrame(lons_out, columns=['Longitude'])
+    field_frame = pd.DataFrame(field_out, columns=[field])
+
+    dataframe = pd.concat([lat_frame, lon_frame, field_frame], axis=1)
+
     return dataframe
 
 
@@ -222,9 +270,31 @@ def plot_os_orbit(os_df, fieldname='SSS1', vmin=None, vmax=None):
                   s=dot_size,
                   zorder=10,
                   cmap=cmap,
+                  vmin=vmin,
+                  vmax=vmax,
                   )
         cbar = m.colorbar()
-    
+
+    elif fieldname in ['Dg_chi2_1', 'Dg_chi2_2']:
+        plt.title('Chi2')
+        cmap = 'jet'
+        c = os_df[fieldname]
+        if vmin == None:
+            vmin = 1.0
+        if  vmax== None:
+            vmax = 1.3
+        m.scatter(os_df['Longitude'].values,
+                  os_df['Latitude'].values,
+                  latlon=True,
+                  c=c,
+                  s=dot_size,
+                  zorder=10,
+                  cmap=cmap,
+                  vmin=vmin,
+                  vmax=vmax,
+                  )
+        cbar = m.colorbar()
+
     else:
         plt.title(fieldname)
         cmap = 'viridis'
@@ -377,27 +447,37 @@ if __name__ == '__main__':
     logging.config.dictConfig(logging_config)
     logging.getLogger(__name__)
 
-    udp1 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_ref/' \
-        'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0/' \
-        'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0.DBL'
+    # udp1 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_ref/' \
+    #     'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0/' \
+    #     'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0.DBL'
 
-    udp2 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_v673/' \
-        'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0/' \
-        'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0.DBL'
+    udp1 = '/mnt/smos_data/smos/data/2014/10/18/SM_REPR_MIR_OSUDP2_20141018T034031_20141018T043344_662_320_1/' \
+            'SM_REPR_MIR_OSUDP2_20141018T034031_20141018T043344_662_320_1.DBL'
+    # udp2 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_v673/' \
+    #     'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0/' \
+    #     'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0.DBL'
+
+    udp2 = '/home/rdavies/workspace/EO_CFI/Output/SM_TEST_MIR_OSUDP2_20141018T034031_20141018T043344_673_001_0/' \
+            'SM_TEST_MIR_OSUDP2_20141018T034031_20141018T043344_673_001_0.DBL'
+
     print('==========')
     print(os.path.basename(udp1)[14:17])
     print(os.path.basename(udp1))
     print('==========')
 
     data1 = read_os_udp(udp1)
-    df1 = extract_field(data1)
+    df1 = extract_field(data1, fieldname='Dg_chi2_1')
     #print(df1)
+    import sys
+    #sys.exit(0)
 
     data2 = read_os_udp(udp2)
-    df2 = extract_field(data2)
+    df2 = extract_field(data2, fieldname='Dg_chi2_1')
     #print(df2)
 
-    #evaluate_field_diff(df1, df2, fieldname='SSS1', vmin=-0.001, vmax=0.001, xaxis='Latitude')
-    plot_os_orbit(df2, fieldname='SSS1', vmin=33, vmax=37)
-    import sys
+    df = extract_interpolated_field(data1)
+    plot_os_orbit(df)
+
+    # evaluate_field_diff(df2, df1, fieldname='Dg_chi2_1', vmin=-0.01, vmax=0.01, xaxis='Latitude')
+    #plot_os_orbit(df1, fieldname='Dg_chi2_1', vmin=1, vmax=1.2)
 
