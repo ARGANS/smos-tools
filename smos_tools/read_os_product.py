@@ -7,7 +7,8 @@ from mpl_toolkits.basemap import Basemap
 import logging
 import logging.config
 import os
-
+import netCDF4 as nc
+import scipy.interpolate
 from smos_tools.data_types.os_udp_datatype import datatype, science_flags_dtype, control_flags_dtype
 from smos_tools.logger.logging_config import logging_config
 
@@ -124,7 +125,7 @@ def extract_field(data, fieldname='SSS1'):
     return dataframe
 
 
-def extract_interpolated_field(data, field='SSS1', latmin=-90, latmax=90, lonmin=-180, lonmax=180, delta=0.25, dist_threshold=0.25):
+def interpolate_udp_field(data, field='SSS1', latmin=-90, latmax=90, lonmin=-180, lonmax=180, delta=0.25, dist_threshold=0.25):
     """
     Interpolates a given geophysical field of the udp file over a regular grid, according to nearest neighbour.
 
@@ -136,15 +137,15 @@ def extract_interpolated_field(data, field='SSS1', latmin=-90, latmax=90, lonmin
     :param lonmax: maximum longitude of the regular grid
     :param delta: distance in degrees between two points on the regular grid
     :param dist_threshold: maximum distance accepted for nearest neighbour interpolation
-    :return: data frame with lat, lon, field value
+    :return: numpy arrays: lats, lons, field value
     """
 
     lats = np.arange(latmin, latmax, delta)
     lons = np.arange(lonmin, lonmax, delta)
 
-    field_out = []
-    lats_out = []
-    lons_out = []
+    data_out = np.empty((lats.size, lons.size))
+    data_out[:] = np.nan
+
     dist_threshold = 0.25  # threshold ditance value for nearest interpolation (in degrees)
     for index_value, value in enumerate(data['Geophysical_Parameters_Data'][field]):
 
@@ -156,17 +157,112 @@ def extract_interpolated_field(data, field='SSS1', latmin=-90, latmax=90, lonmin
             if (np.min(np.abs(lats - data['Grid_Point_Data']['Latitude'][index_value])) < dist_threshold) & \
                (np.min(np.abs(lons - data['Grid_Point_Data']['Longitude'][index_value])) < dist_threshold):
 
-                field_out.append(value)
-                lats_out.append(lats[i_lat])
-                lons_out.append(lons[i_lon])
+                data_out[i_lat, i_lon] = value
 
-    lat_frame = pd.DataFrame(lats_out, columns=['Latitude'])
-    lon_frame = pd.DataFrame(lons_out, columns=['Longitude'])
-    field_frame = pd.DataFrame(field_out, columns=[field])
+    return lats, lons, data_out
 
-    dataframe = pd.concat([lat_frame, lon_frame, field_frame], axis=1)
 
-    return dataframe
+def read_and_interpolate_isas(filename, latmin=-90, latmax=90, lonmin=-180, lonmax=180, delta=0.25, dist_threshold=0.25):
+    """
+    Interpolates isas on a regular grid
+    :param filename: path/to/isas/file
+    :param latmin: minimum latitude of the regular grid
+    :param latmax: maximum latitude of the regular grid
+    :param lonmin: minimum longitude of the regular grid
+    :param lonmax: maximum longitude of the regular grid
+    :param delta: distance in degrees between two points on the regular grid
+    :param dist_threshold: maximum distance accepted for nearest neighbour interpolation
+    :return: data frame with lat, lon, field value
+    """
+    lats = np.arange(latmin, latmax, delta)
+    lons = np.arange(lonmin, lonmax, delta)
+    mlons, mlats = np.meshgrid(lons, lats)
+
+    dataset = nc.Dataset(filename)
+    isas_lat = dataset.variables['latitude'][:]
+    isas_lon = dataset.variables['longitude'][:]
+    isas_sss = dataset.variables['PSAL'][0, 0, :, :]
+    #isas_pcv = dataset.variables['PSAL_PCTVAR'][0, 0, :, :]
+    dataset.close()
+
+    isas_mlon, isas_mlat = np.meshgrid(isas_lon, isas_lat)
+
+    isas_interp = scipy.interpolate.griddata(
+                         (isas_mlon.flatten(), isas_mlat.flatten()),
+                         isas_sss.flatten(),
+                         (mlons, mlats),
+                         method='nearest',
+                         )
+    #pcv_interp = scipy.interpolate.griddata(
+                         #(isas_mlon.flatten(), isas_mlat.flatten()),
+                         #isas_pcv.flatten(),
+                         #(mlons, mlats),
+                         #method='nearest',
+                         #)
+
+    return isas_interp
+
+
+def plot_os_bias(udp_filename, isas_filename, field='SSS1'):
+    """
+    Plots salinity bias against isas salinity.
+
+    :param udp_filename: path/to/os/udp/file
+    :param isas_filename: path/to/isas/file
+    :return: a plot
+    """
+
+    data_udp = read_os_udp(udp_filename)
+    lats, lons, udp_interp = interpolate_udp_field(data_udp, field=field)
+    isas_interp = read_and_interpolate_isas(isas_filename)
+
+    bias = udp_interp - isas_interp
+
+    mlons, mlats = np.meshgrid(lons, lats)
+    valid_index = (udp_interp > 0)
+    mlons_valid = mlons[valid_index]
+
+    fig1 = plt.figure()
+    centre_lon = mlons_valid.mean()
+    lat_0 = 5.
+    lon_0 = centre_lon
+    width = 110574 * 70  # ~100km * 70 deg
+    height = 10 ** 5 * 170  # 100km * 140 deg
+    dot_size = 1
+    m = Basemap(
+        projection='poly',
+        lat_0=lat_0,
+        lon_0=lon_0,
+        width=width,
+        height=height,
+        resolution='l')
+    m.drawcoastlines(linewidth=0.5)
+    m.fillcontinents()
+    # labels [left, right, top, bottom]
+    m.drawparallels(np.arange(-80., 80., 20.), labels=[True, False, False, False], fontsize=8)
+    m.drawmeridians(np.arange(-180, 180, 20.), labels=[False, False, False, True], fontsize=8, rotation=45)
+    m.drawmapboundary()
+    plt.title('SSS bias')
+    cmap = 'bwr'
+    vmin = -1.
+    vmax = +1.
+    m.scatter(mlons,
+              mlats,
+              latlon=True,
+              c=bias,
+              s=dot_size,
+              zorder=10,
+              cmap=cmap,
+              vmin=-1,
+              vmax=+1,
+              )
+    cbar = m.colorbar()
+    cbar.set_label('[pss]')
+
+    plt.show()
+
+    print(np.mean(np.abs(bias[udp_interp > 0])))
+
 
 
 def setup_os_plot(lat, long):
@@ -460,6 +556,10 @@ if __name__ == '__main__':
     udp2 = '/home/rdavies/workspace/EO_CFI/Output/SM_TEST_MIR_OSUDP2_20141018T034031_20141018T043344_673_001_0/' \
             'SM_TEST_MIR_OSUDP2_20141018T034031_20141018T043344_673_001_0.DBL'
 
+
+    dir_isas = '/mnt/smos_int/smos/Manuel/ISAS/ISAS2015'
+    filename_isas = 'ISAS15_DM_20141015_fld_PSAL.nc'
+
     print('==========')
     print(os.path.basename(udp1)[14:17])
     print(os.path.basename(udp1))
@@ -467,16 +567,20 @@ if __name__ == '__main__':
 
     data1 = read_os_udp(udp1)
     df1 = extract_field(data1, fieldname='Dg_chi2_1')
-    #print(df1)
-    import sys
-    #sys.exit(0)
+    # print(df1['Dg_chi2_1'])
+    # print(type(df1['Dg_chi2_1']))
+    # import sys
+    # sys.exit(0)
 
     data2 = read_os_udp(udp2)
     df2 = extract_field(data2, fieldname='Dg_chi2_1')
     #print(df2)
 
-    df = extract_interpolated_field(data1)
-    plot_os_orbit(df)
+    plot_os_bias(udp1, os.path.join(dir_isas, filename_isas))
+    #plot_os_bias(udp2, os.path.join(dir_isas, filename_isas))
+
+    #df = extract_interpolated_field(data1)
+    #plot_os_orbit(df)
 
     # evaluate_field_diff(df2, df1, fieldname='Dg_chi2_1', vmin=-0.01, vmax=0.01, xaxis='Latitude')
     #plot_os_orbit(df1, fieldname='Dg_chi2_1', vmin=1, vmax=1.2)
