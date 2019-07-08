@@ -162,7 +162,7 @@ def interpolate_udp_field(data, field='SSS1', latmin=-90, latmax=90, lonmin=-180
     return lats, lons, data_out
 
 
-def read_and_interpolate_isas(filename, latmin=-90, latmax=90, lonmin=-180, lonmax=180, delta=0.25, dist_threshold=0.25):
+def read_and_interpolate_isas(filename, latmin=-90, latmax=90, lonmin=-180, lonmax=180, delta=0.25, dist_threshold=0.25, return_df=False):
     """
     Interpolates isas on a regular grid
     :param filename: path/to/isas/file
@@ -172,6 +172,7 @@ def read_and_interpolate_isas(filename, latmin=-90, latmax=90, lonmin=-180, lonm
     :param lonmax: maximum longitude of the regular grid
     :param delta: distance in degrees between two points on the regular grid
     :param dist_threshold: maximum distance accepted for nearest neighbour interpolation
+    :param return_df: if False, returns numpy array; if true, returns a pandas dataframe
     :return: data frame with lat, lon, field value
     """
     lats = np.arange(latmin, latmax, delta)
@@ -182,7 +183,7 @@ def read_and_interpolate_isas(filename, latmin=-90, latmax=90, lonmin=-180, lonm
     isas_lat = dataset.variables['latitude'][:]
     isas_lon = dataset.variables['longitude'][:]
     isas_sss = dataset.variables['PSAL'][0, 0, :, :]
-    #isas_pcv = dataset.variables['PSAL_PCTVAR'][0, 0, :, :]
+    isas_pcv = dataset.variables['PSAL_PCTVAR'][0, 0, :, :]
     dataset.close()
 
     isas_mlon, isas_mlat = np.meshgrid(isas_lon, isas_lat)
@@ -193,14 +194,26 @@ def read_and_interpolate_isas(filename, latmin=-90, latmax=90, lonmin=-180, lonm
                          (mlons, mlats),
                          method='nearest',
                          )
-    #pcv_interp = scipy.interpolate.griddata(
-                         #(isas_mlon.flatten(), isas_mlat.flatten()),
-                         #isas_pcv.flatten(),
-                         #(mlons, mlats),
-                         #method='nearest',
-                         #)
+    pcv_interp = scipy.interpolate.griddata(
+                         (isas_mlon.flatten(), isas_mlat.flatten()),
+                         isas_pcv.flatten(),
+                         (mlons, mlats),
+                         method='nearest',
+                         )
+    if return_df == True:
 
-    return isas_interp
+        lat_frame = pd.DataFrame(mlats.flatten(), columns=['Latitude'])
+        lon_frame = pd.DataFrame(mlons.flatten(), columns=['Longitude'])
+        pcv_frame = pd.DataFrame(pcv_interp.flatten(), columns=['PSAL_PCTVAR'])
+        field_frame = pd.DataFrame(isas_interp.flatten(), columns=['PSAL'])
+
+        dataframe = pd.concat([lat_frame, lon_frame, pcv_frame, field_frame], axis=1)
+        print(dataframe)
+        return dataframe
+
+    else:
+
+        return isas_interp
 
 
 def plot_os_bias(udp_filename, isas_filename, field='SSS1'):
@@ -575,8 +588,9 @@ if __name__ == '__main__':
     data2 = read_os_udp(udp2)
     df2 = extract_field(data2, fieldname='Dg_chi2_1')
     #print(df2)
+    read_and_interpolate_isas(os.path.join(dir_isas, filename_isas), return_df=True)
 
-    plot_os_bias(udp1, os.path.join(dir_isas, filename_isas))
+    #plot_os_bias(udp1, os.path.join(dir_isas, filename_isas))
     #plot_os_bias(udp2, os.path.join(dir_isas, filename_isas))
 
     #df = extract_interpolated_field(data1)
