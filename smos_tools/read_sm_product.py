@@ -19,8 +19,12 @@ def read_sm_product(filepath):
     :param filepath: path to .DBL file
     :return: numpy structured array
     """
-    # Open the data file for reading
+    # check the files are udp files
+    if os.path.basename(filepath)[14:17] != 'UDP':
+        logging.exception('{} is not a UDP file'.format(filepath))
+        sys.exit(filepath)
 
+    # Open the data file for reading
     try:
         file = open(filepath, 'rb')
     except IOError:
@@ -72,15 +76,20 @@ def extract_field(data, fieldname):
     return extracted_data
 
 
-def evaluate_field_diff(smdf1, smdf2, fieldname):
+def evaluate_field_diff(smdf1, smdf2, fieldname, vmin=-1, vmax=1, xaxis='Latitude'):
     """
     Plot the difference between two dataframes for a given field. Gives map plots and scatter.
+    Difference is dataframe2 - dataframe1
     :param smdf1: pandas dataframe containing the requested data field and index (Days, Seconds, Microseconds, Grid_Point_ID)
     :param smdf2: pandas dataframe containing the requested data field and index (Days, Seconds, Microseconds, Grid_Point_ID)
     :param fieldname: String fieldname of the data field to compare
+    :param vmin: Minimum value visible on plot. Lower values saturate.
+    :param vmax: Maximum value visible on plot. Higher values saturate.
+    :param xaxis: Variable against which the variable is plotted. One of: {'Latitude', 'Grid_Point_ID'}
     :return:
     """
-    logging.info('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
+    logging.info("Evaluating difference between 2 dataframes for field '{}'...".format(fieldname))
+    logging.info('The difference runs from 1 -> 2, ie. old -> new, 2 subtract 1')
 
     # Exclude NaN records (reported as fieldname = -999.0)
     frame1 = smdf1[smdf1[fieldname] != -999.0]
@@ -119,30 +128,32 @@ def evaluate_field_diff(smdf1, smdf2, fieldname):
     rightonly.drop(fieldname+'_x', axis=1, inplace=True)
     rightonly.drop('_merge', axis=1, inplace=True)
 
+    non_zero_diff = common[common[fieldname+'_Diff'] != 0]
+
     logging.info('Dataset analysis:')
     logging.info('{} rows common to both datasets.'.format(len(common.index)))
+    logging.info('{}/{} common rows have non-zero differences.'.format(len(non_zero_diff.index), len(common.index)))
     logging.info('{} rows in dataset 1 only.'.format(len(leftonly.index)))
     logging.info('{} rows in dataset 2 only.'.format(len(rightonly.index)))
 
     # Get records in common that are same/diff
 
-    plot_sm_difference(common, fieldname=fieldname+'_Diff')
+    plot_sm_difference(common, fieldname=fieldname+'_Diff', vmin=vmin, vmax=vmax)
 
-    fig2, ax2 = plt.subplots(1)
-    # plot each difference against the index grid point id
-    common.plot(x='Grid_Point_ID', y=fieldname+'_Diff', ax=ax2, legend=False, rot=90,
-                fontsize=8, clip_on=False, style='o')
-    ax2.set_ylabel(fieldname + ' Diff')
-    ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
-    fig2.tight_layout()
+    #fig2, ax2 = plt.subplots(1)
+    ## plot each difference against the index grid point id
+    #common.plot(x=xaxis, y=fieldname+'_Diff', ax=ax2, legend=False, rot=90,
+    #            fontsize=8, clip_on=False, style='o')
+    #ax2.set_ylabel(fieldname + ' Diff')
+    #ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
+    #fig2.tight_layout()
 
     # plot only the ones with a non-zero difference?
-    non_zero_diff = common[common[fieldname+'_Diff'] != 0]
     if non_zero_diff.empty:
         logging.info('No differences to plot')
     else:
         fig3, ax3 = plt.subplots(1)
-        non_zero_diff.plot(x='Grid_Point_ID', y=fieldname+'_Diff', ax=ax3, legend=False,
+        non_zero_diff.plot(x=xaxis, y=fieldname+'_Diff', ax=ax3, legend=False,
                            rot=90, fontsize=8, clip_on=False, style='o')
         ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
         ax3.set_ylabel(fieldname + ' Diff')
@@ -203,7 +214,7 @@ def setup_sm_plot(lat, long):
 
 
 # Plot a SM orbit from a pandas dataframe
-def plot_sm_orbit(smdf, fieldname='Soil_Moisture'):
+def plot_sm_orbit(smdf, fieldname='Soil_Moisture', vmin=0, vmax=1):
     """
      Plot the soil moisture orbit. Gives map plots and scatter.
     
@@ -220,8 +231,6 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture'):
         plt.title(fieldname)
         cmap = 'viridis_r'
         c = smdf[fieldname]  # geophysical variable to plot
-        vmin = 0.
-        vmax = 1.
         m.scatter(smdf['Longitude'].values,
           smdf['Latitude'].values,
           latlon=True,
@@ -252,7 +261,7 @@ def plot_sm_orbit(smdf, fieldname='Soil_Moisture'):
     plt.show()
 
 
-def plot_sm_difference(smdf, fieldname='Soil_Moisture'):
+def plot_sm_difference(smdf, fieldname='Soil_Moisture', vmin=-1, vmax=1):
     """
         Plot the difference between two dataframes.
 
@@ -260,15 +269,13 @@ def plot_sm_difference(smdf, fieldname='Soil_Moisture'):
         :param fieldname: string fieldname of the data field to compare
         :return:
         """
-    logging.info('Plotting {} ...'.format(fieldname))
+    logging.info('Plotting {}...'.format(fieldname))
 
     fig, m, dot_size = setup_sm_plot(smdf['Latitude'].values, smdf['Longitude'].values)
 
     plt.title(fieldname)
-    cmap = 'bwr'
+    cmap = 'bwr_r'
     c = smdf[fieldname]  # geophysical variable to plot
-    vmin = -1.
-    vmax = +1.
     m.scatter(smdf['Longitude'].values,
               smdf['Latitude'].values,
               latlon=True,
