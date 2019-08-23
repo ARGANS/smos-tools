@@ -51,15 +51,23 @@ Example usage:
 
 Utility to read and plot L2SM `UDP` files.
 
+The commands are:
+
+- `plot-diff`, `diff` : Evaluate and plot the difference between two `UDP` `.DBL` files.
+- `plot-orbit`, `plot` : Plot the orbit from a Soil Moisture `UDP` `.DBL` file.
+
 The options are:
 
-- `--plot-diff FILE FILE`, `-d FILE FILE` : Evaluate the and plot the difference between two `UDP` `DBL` files.
+- `--orbit-file FILE1 FILE2`, `-o FILE1 FILE2` : Direct path to one or more SM `UDP` `.DBL` files to evaluate
+- `--orbit-name NAME1 NAME2`, `-n NAME1 NAME2` : Name to associate to each orbit, for plot output etc.
 - `--field-name NAME`, `-f NAME` : Field name to plot. Default is `Soil_Moisture`.
-- `--plot-orbit FILE`, `-o FILE` : Plot the Soil Moisture orbit from `UDP` file.
+- `--vmin`, `-m` : Minimum y-axis value (used by orbit plots, will saturate at this value, default: `-1`)
+- `--vmax`, `-M` : Maximum y-axis value (used by orbit plots, will saturate at this value, default: `1`)
+- `--x-axis`, `-x` : X-axis variable to use for point-value plot (default: `Latitude`)
 
 Example usage:
 
-`$ read_sm_product -d SM_TEST_MIR_SMUDP2_20180530T044823_20180530T054143_650_001_1/SM_TEST_MIR_SMUDP2_20180530T044823_20180530T054143_650_001_1.DBL SM_TEST_MIR_SMUDP2_20180530T044823_20180530T054143_650_001_1/SM_TEST_MIR_SMUDP2_20180530T044823_20180530T054143_650_001_1.DBL`
+`$ read_sm_product diff -o SM_TEST_MIR_SMUDP2_20180530T044823_20180530T054143_650_001_1/SM_TEST_MIR_SMUDP2_20180530T044823_20180530T054143_650_001_1.DBL SM_TEST_MIR_SMUDP2_20180530T044823_20180530T054143_650_001_1/SM_TEST_MIR_SMUDP2_20180530T044823_20180530T054143_650_001_1.DBL -n v671 v680`
 
 ## Contents
 
