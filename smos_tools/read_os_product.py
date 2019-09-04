@@ -23,7 +23,6 @@ def read_os_udp(filename):
     # check the files are udp files
     if os.path.basename(filename)[14:17] != 'UDP':
         logging.exception('{} is not a UDP file'.format(filename))
-        raise
 
     try:
         file = open(filename, 'rb')
