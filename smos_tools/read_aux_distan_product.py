@@ -26,7 +26,7 @@ def read_aux_distan(filename):
         logging.exception('file {} does not exist'.format(filename))
         raise
 
-    logging.info('Reading file...')
+    logging.info('Reading AUX_DISTAN file...')
     data = np.fromfile(file, dtype=np.dtype(datatype), count=2621442)
 
     file.close()
@@ -49,6 +49,7 @@ def unpack_flag(distan_flags):
 
     # unpack from Least Significant Bit
 
+    logging.info('Unpacking flags...')
     for position in range(0, len(flag_datatype)):
         unpacked_flags[flag_datatype[position][0]] = (distan_flags >> position) & 1
 
@@ -56,6 +57,12 @@ def unpack_flag(distan_flags):
 
 
 def read_gridpoint_to_is_sea(filename):
+    """
+    Read the AUX_DISTAN Product file, unpack flags and manipulate to get pandas dataframe, with Grid_Point_ID, Is_Sea
+
+    :param filename: path to AUX_DISTAN .DBL file
+    :return: Pandas dataframe, Grid_Point_ID, Is_Sea
+    """
 
     # Read all data
     data = read_aux_distan(filename)
@@ -68,6 +75,7 @@ def read_gridpoint_to_is_sea(filename):
         'Fg_Land_Sea_Coast1_tot': flags['Fg_Land_Sea_Coast1_tot'],
         'Fg_Land_Sea_Coast2_tot': flags['Fg_Land_Sea_Coast2_tot']})
 
+    logging.info('Converting flag values to Is_Sea boolean...')
     # Replace flag columns with a single column to signify sea. Is land when both flags are false, sea when either flag is true
     dataframe['Is_Sea'] = dataframe.apply(lambda row: (row['Fg_Land_Sea_Coast1_tot'] or row['Fg_Land_Sea_Coast2_tot']), axis=1)
     dataframe.drop(columns=['Fg_Land_Sea_Coast1_tot', 'Fg_Land_Sea_Coast2_tot'], inplace=True)

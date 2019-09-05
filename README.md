@@ -18,7 +18,7 @@ Required packages:
 
 Uninstall any previous version of SMOS Tools you may have installed with
 
-`pip uninstall smos_tools`
+`pip uninstall smos-tools`
 
 To build, `cd` to the root directory containing the `setup.py` and then run
 
@@ -27,6 +27,10 @@ To build, `cd` to the root directory containing the `setup.py` and then run
 Then (preferably not in the conda environment you are using to develop this)
 
 `cd dist && pip install smos_tools-1.0.1-py3-none-any.whl`
+
+One-liner:
+
+`pip uninstall smos-tools && python setup.py bdist_wheel && pip install dist/smos_tools-1.0.1-py3-none-any.whl`
 
 ## Usage
 
@@ -76,3 +80,6 @@ Example usage:
 | `read_sm_product.py` | Contains functions for reading, formatting and plotting and evaluating L2SM `UDP` files |
 | `read_os_product.py` | Contains functions for reading, formatting and plotting and evaluating L2OS `UDP` files |
 | `read_os_dtbxy.py` | Contains the function to read an L2OS `DTBXY` file |
+| `read_aux_dgg_product.py` | Function to read an `AUX_DGG___` file into a numpy structured array |
+| `read_aux_distan_product.py` | Functions to read an `AUX_DISTAN` file into a numpy structured array, and parse the flags -> create a pandas dataframe with an `Is_Sea` boolean from flags |
+| `generate_vp_ISEA4H9.py` | Function to read `DGG` and `DISTAN` files, combining them into a single CSV in the format used by the Validation protocol (for definition of `ISEA4H9` grid) |
