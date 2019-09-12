@@ -6,13 +6,13 @@ import logging
 import logging.config
 import os
 from smos_tools.read_aux_dgg_product import read_aux_dgg
-from smos_tools.read_aux_distan_product import read_gridpoint_to_is_sea
+from smos_tools.read_aux_distan_product import read_gridpoint_to_is_sea_and_ice
 from smos_tools.logger.logging_config import logging_config
 
 
 def generate_ISEA4H9(aux_dgg_filepath, aux_distan_filepath, output_directory):
     """
-    Generate ISEA4H9 grid specification CSV, containing columns Grid_Point_ID, Latitude, Longitude, Is_Sea
+    Generate ISEA4H9 grid specification CSV, containing columns Grid_Point_ID, Latitude, Longitude, Is_Sea, Is_Sometimes_Sea_Ice, Is_Always_Sea_Ice
 
     :param aux_dgg_filepath: Path to an AUX_DGG___ .DBL file
     :param aux_distan_filepath: Path to an AUX_DISTAN .DBL file
@@ -20,7 +20,7 @@ def generate_ISEA4H9(aux_dgg_filepath, aux_distan_filepath, output_directory):
     :return: Success/fail
     """
 
-    output_filepath = os.path.join(output_directory, 'ISEA4H9_from_AUX_files.csv')
+    output_filepath = os.path.join(output_directory, 'ISEA4H9_from_AUX_files_ice.csv')
 
     # Do some basic IO checks
     if not os.path.exists(aux_dgg_filepath):
@@ -38,10 +38,10 @@ def generate_ISEA4H9(aux_dgg_filepath, aux_distan_filepath, output_directory):
     # First read the two input files
     logging.info('Reading input files...')
     dgg = pd.DataFrame(read_aux_dgg(aux_dgg_filepath))
-    distan = read_gridpoint_to_is_sea(aux_distan_filepath)
+    distan = read_gridpoint_to_is_sea_and_ice(aux_distan_filepath)
     # Dataframe contents
     # Grid_Point_ID   Latitude   Longitude   Altitude
-    # Grid_Point_ID  Is_Sea
+    # Grid_Point_ID  Is_Sea Is_Sometimes_Sea_Ice  Is_Always_Sea_Ice
 
     logging.info('Joining AUX file contents...')
     # Join on the Grid_Point_ID column
@@ -51,7 +51,7 @@ def generate_ISEA4H9(aux_dgg_filepath, aux_distan_filepath, output_directory):
 
     logging.info('Converting and writing output CSV...')
     # Save the file as a CSV with column headers
-    out.to_csv(output_filepath, columns=['Grid_Point_ID', 'Latitude', 'Longitude', 'Is_Sea'], index=False)
+    out.to_csv(output_filepath, columns=['Grid_Point_ID', 'Latitude', 'Longitude', 'Is_Sea', 'Is_Sometimes_Sea_Ice', 'Is_Always_Sea_Ice'], index=False)
 
     logging.info('ISEA4H9 creation complete. File saved.')
 
@@ -63,5 +63,5 @@ if __name__ == '__main__':
 
     dgg_fp = '/home/smos/builds/v6.71/smos/products/AUX_/DGG___/SM_OPER_AUX_DGG____20050101T000000_20500101T000000_300_003_3/SM_OPER_AUX_DGG____20050101T000000_20500101T000000_300_003_3.DBL'
     distan_fp = '/home/smos/builds/v6.71/smos/products/AUX_/DISTAN/SM_OPER_AUX_DISTAN_20050101T000000_20500101T000000_001_011_3/SM_OPER_AUX_DISTAN_20050101T000000_20500101T000000_001_011_3.DBL'
-    output_fp = 'insert_output_directory_here'
+    output_fp = '/home/swatts/Documents/isea4h9-output'
     generate_ISEA4H9(dgg_fp, distan_fp, output_fp)
