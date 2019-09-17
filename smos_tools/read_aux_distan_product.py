@@ -26,11 +26,11 @@ def read_aux_distan(filename):
         logging.exception('file {} does not exist'.format(filename))
         raise
 
-    logging.info('Reading AUX_DISTAN file...')
+    logging.debug('Reading AUX_DISTAN file...')
     data = np.fromfile(file, dtype=np.dtype(datatype), count=2621442)
 
     file.close()
-    logging.info('Done.')
+    logging.debug('Done.')
 
     return data
 
@@ -49,7 +49,7 @@ def unpack_flag(distan_flags):
 
     # unpack from Least Significant Bit
 
-    logging.info('Unpacking flags...')
+    logging.debug('Unpacking flags...')
     for position in range(0, len(flag_datatype)):
         unpacked_flags[flag_datatype[position][0]] = (distan_flags >> position) & 1
 
@@ -70,7 +70,7 @@ def unpack_sea_ice_flag(sea_ice_flags):
 
     # unpack from Least Significant Bit
 
-    logging.info('Unpacking sea-ice mask flags...')
+    logging.debug('Unpacking sea-ice mask flags...')
     for position in range(0, len(flag_sea_ice_datatype)):
         unpacked_flags[flag_sea_ice_datatype[position][0]] = (sea_ice_flags >> position) & 1
 
@@ -113,12 +113,12 @@ def read_gridpoint_to_is_sea_and_ice(filename):
         })
     # TODO then same apply as below
 
-    logging.info('Converting flag values to Is_Sea boolean...')
+    logging.debug('Converting flag values to Is_Sea boolean...')
     # Replace flag columns with a single column to signify sea. Is land when both flags are false, sea when either flag is true
     dataframe['Is_Sea'] = dataframe.apply(lambda row: (row['Fg_Land_Sea_Coast1_tot'] or row['Fg_Land_Sea_Coast2_tot']), axis=1)
     dataframe.drop(columns=['Fg_Land_Sea_Coast1_tot', 'Fg_Land_Sea_Coast2_tot'], inplace=True)
 
-    logging.info('Converting sea-ice mask flag values to Is_Sometimes_Sea_Ice, Is_Always_Sea_Ice booleans...')
+    logging.debug('Converting sea-ice mask flag values to Is_Sometimes_Sea_Ice, Is_Always_Sea_Ice booleans...')
     dataframe['Is_Sometimes_Sea_Ice'] = dataframe.apply(lambda row: (row['Sea_Ice_Month_1'] or
         row['Sea_Ice_Month_2'] or
         row['Sea_Ice_Month_3'] or

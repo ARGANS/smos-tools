@@ -33,5 +33,5 @@ if __name__ == '__main__':
     sm_df_mod.at[(5680, 39050, 378980, 1204344), 'Soil_Moisture'] = -999.0  # 0.086155
 
     # Call function to evaluate the difference between the two
-    read_sm_product.evaluate_field_diff(sm_df, sm_df_mod, field)
+    read_sm_product.evaluate_field_diff(sm_df, sm_df_mod, field, "Orbit1", "Orbit2")
 

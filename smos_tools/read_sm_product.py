@@ -21,8 +21,7 @@ def read_sm_product(filepath):
     """
     # check the files are udp files
     if os.path.basename(filepath)[14:17] != 'UDP':
-        logging.exception('{} is not a UDP file'.format(filepath))
-        sys.exit(filepath)
+        raise ValueError('{} is not a UDP file'.format(filepath))
 
     # Open the data file for reading
     try:
@@ -33,11 +32,11 @@ def read_sm_product(filepath):
 
     # Read first unsigned int32, containing number of datapoints to iterate over
     n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]
-    logging.info('Data file contains {} data points'.format(n_grid_points))
-    logging.info('Reading file... ')
+    logging.debug('Data file contains {} data points'.format(n_grid_points))
+    logging.debug('Reading file... ')
     data = np.fromfile(file, dtype=datatype, count=n_grid_points)
     file.close()
-    logging.info('Done')
+    logging.debug('Done')
 
     return data
 
@@ -88,18 +87,18 @@ def evaluate_field_diff(smdf1, smdf2, fieldname, orbitnameone, orbitnametwo, vmi
     :param xaxis: Variable against which the variable is plotted. One of: {'Latitude', 'Grid_Point_ID'}
     :return:
     """
-    logging.info("Evaluating difference between 2 dataframes for field '{}'...".format(fieldname))
-    logging.info('The difference runs from 1 -> 2, ie. {} -> {}, 2 subtract 1'.format(orbitnameone, orbitnametwo))
-    logging.info('Dataset 1: {}'.format(orbitnameone))
-    logging.info('Dataset 2: {}'.format(orbitnametwo))
+    logging.debug("Evaluating difference between 2 dataframes for field '{}'...".format(fieldname))
+    logging.debug('The difference runs from 1 -> 2, ie. {} -> {}, 2 subtract 1'.format(orbitnameone, orbitnametwo))
+    logging.debug('Dataset 1: {}'.format(orbitnameone))
+    logging.debug('Dataset 2: {}'.format(orbitnametwo))
 
     # Exclude NaN records (reported as fieldname = -999.0)
     frame1 = smdf1[smdf1[fieldname] != -999.0]
     frame2 = smdf2[smdf2[fieldname] != -999.0]
 
     # Print record counts
-    logging.info('Dataset 1 contains {}/{} valid datarows'.format(len(frame1.index), len(smdf1)))
-    logging.info('Dataset 2 contains {}/{} valid datarows'.format(len(frame2.index), len(smdf2)))
+    logging.debug('Dataset 1 contains {}/{} valid datarows'.format(len(frame1.index), len(smdf1)))
+    logging.debug('Dataset 2 contains {}/{} valid datarows'.format(len(frame2.index), len(smdf2)))
 
     # Get records in common
     common = pd.merge(frame1, frame2, how='inner', on=['Days', 'Seconds', 'Microseconds', 'Grid_Point_ID'])
@@ -132,11 +131,11 @@ def evaluate_field_diff(smdf1, smdf2, fieldname, orbitnameone, orbitnametwo, vmi
 
     non_zero_diff = common[common[fieldname+'_Diff'] != 0]
 
-    logging.info('Dataset analysis:')
-    logging.info('{} rows common to both datasets.'.format(len(common.index)))
-    logging.info('{}/{} common rows have non-zero differences.'.format(len(non_zero_diff.index), len(common.index)))
-    logging.info('{} rows in dataset 1 only.'.format(len(leftonly.index)))
-    logging.info('{} rows in dataset 2 only.'.format(len(rightonly.index)))
+    logging.debug('Dataset analysis:')
+    logging.debug('{} rows common to both datasets.'.format(len(common.index)))
+    logging.debug('{}/{} common rows have non-zero differences.'.format(len(non_zero_diff.index), len(common.index)))
+    logging.debug('{} rows in dataset 1 only.'.format(len(leftonly.index)))
+    logging.debug('{} rows in dataset 2 only.'.format(len(rightonly.index)))
 
     # Get records in common that are same/diff
 
@@ -152,7 +151,7 @@ def evaluate_field_diff(smdf1, smdf2, fieldname, orbitnameone, orbitnametwo, vmi
 
     # plot only the ones with a non-zero difference?
     if non_zero_diff.empty:
-        logging.info('No differences to plot')
+        logging.debug('No differences to plot')
     else:
         fig3, ax3 = plt.subplots(1)
         plt.title('{} : ({}) subtract ({})'.format(fieldname.replace('_',' '), orbitnametwo, orbitnameone))
@@ -226,7 +225,7 @@ def plot_sm_orbit(smdf, orbit_name, fieldname='Soil_Moisture', vmin=0, vmax=1):
     :return:
     """
 
-    logging.info('Plotting {} orbit, field {}...'.format(orbit_name, fieldname))
+    logging.debug('Plotting {} orbit, field {}...'.format(orbit_name, fieldname))
 
     fig, m, dot_size = setup_sm_plot(smdf['Latitude'].values, smdf['Longitude'].values)
 
@@ -274,7 +273,7 @@ def plot_sm_difference(smdf, orbitnameone, orbitnametwo, fieldname='Soil_Moistur
         :param fieldname: string fieldname of the data field to compare
         :return:
         """
-    logging.info('Plotting {} -> {} orbits, field {}...'.format(orbitnameone, orbitnametwo, fieldname))
+    logging.debug('Plotting {} -> {} orbits, field {}...'.format(orbitnameone, orbitnametwo, fieldname))
 
     fig, m, dot_size = setup_sm_plot(smdf['Latitude'].values, smdf['Longitude'].values)
 

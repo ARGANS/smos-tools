@@ -165,12 +165,12 @@ if __name__ == '__main__':
                  'SM_TEST_AUX_DTBXY__20140402T010641_20140402T015956_670_001_8/' \
                  'SM_TEST_AUX_DTBXY__20140402T010641_20140402T015956_670_001_8.DBL'
 
-    logging.info(dtbxy_file)
+    logging.debug(dtbxy_file)
 
     import time
     t_start = time.time()
     read_dtbxy(datatype, dtbxy_file)
     t_end = time.time()
     t = t_end - t_start
-    logging.info('function read_dtbxy runs in {}  seconds.'.format(t))
+    logging.debug('function read_dtbxy runs in {}  seconds.'.format(t))
 

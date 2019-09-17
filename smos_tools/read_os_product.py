@@ -22,7 +22,7 @@ def read_os_udp(filename):
     """
     # check the files are udp files
     if os.path.basename(filename)[14:17] != 'UDP':
-        logging.exception('{} is not a UDP file'.format(filename))
+        raise ValueError('{} is not a UDP file'.format(filename))
 
     try:
         file = open(filename, 'rb')
@@ -30,12 +30,12 @@ def read_os_udp(filename):
         logging.exception('file {} does not exist'.format(filename))
         raise
 
-    logging.info('Reading file...')
+    logging.debug('Reading file...')
     # Read first unsigned int32, containing number of grid points to iterate over
     n_grid_points = np.fromfile(file, dtype=np.uint32, count=1)[0]
     data = np.fromfile(file, dtype=np.dtype(datatype), count=n_grid_points)
     file.close()
-    logging.info('Done.')
+    logging.debug('Done.')
     
     return data
 
@@ -338,7 +338,7 @@ def plot_os_orbit(os_df, fieldname='SSS1', vmin=None, vmax=None):
     :return:
     """
     
-    logging.info('Plotting {} orbit...'.format(fieldname))
+    logging.debug('Plotting {} orbit...'.format(fieldname))
 
     figure, m, dot_size = setup_os_plot(os_df['Latitude'].values, os_df['Longitude'].values)
     
@@ -429,7 +429,7 @@ def plot_os_difference(os_df, fieldname='SSS1', vmin=-1, vmax=+1):
         :return:
         """
 
-    logging.info('Plotting {} ...'.format(fieldname))
+    logging.debug('Plotting {} ...'.format(fieldname))
 
     figure, m, dot_size = setup_os_plot(os_df['Latitude'].values, os_df['Longitude'].values)
 
@@ -462,11 +462,11 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1', vmin=-1, vmax=+1, xaxi
     :param xaxis: Varible againt which the fieldname is plotted. One of: {'Latitude', 'Grid_Point_ID'}
     :return:
     """
-    logging.info('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
+    logging.debug('Evaluating difference between 2 dataframes for field {}...'.format(fieldname))
 
     # Print record counts
-    logging.info('Dataset 1 contains {} valid datarows'.format(len(frame1.index)))
-    logging.info('Dataset 2 contains {} valid datarows'.format(len(frame2.index)))
+    logging.debug('Dataset 1 contains {} valid datarows'.format(len(frame1.index)))
+    logging.debug('Dataset 2 contains {} valid datarows'.format(len(frame2.index)))
 
     # Get records in common
     common = pd.merge(frame1, frame2, how='inner', on=['Mean_acq_time', 'Grid_Point_ID'])
@@ -497,10 +497,10 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1', vmin=-1, vmax=+1, xaxi
     rightonly.drop(fieldname + '_x', axis=1, inplace=True)
     rightonly.drop('_merge', axis=1, inplace=True)
 
-    logging.info('Dataset analysis:')
-    logging.info('{} rows common to both datasets.'.format(len(common.index)))
-    logging.info('{} rows in dataset 1 only.'.format(len(leftonly.index)))
-    logging.info('{} rows in dataset 2 only.'.format(len(rightonly.index)))
+    logging.debug('Dataset analysis:')
+    logging.debug('{} rows common to both datasets.'.format(len(common.index)))
+    logging.debug('{} rows in dataset 1 only.'.format(len(leftonly.index)))
+    logging.debug('{} rows in dataset 2 only.'.format(len(rightonly.index)))
 
     # Get records in common that are same/diff
 
@@ -519,7 +519,7 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1', vmin=-1, vmax=+1, xaxi
     # plot only the ones with a non-zero difference?
     non_zero_diff = common[common[fieldname + '_Diff'] != 0]
     if non_zero_diff.empty:
-        logging.info('No differences to plot')
+        logging.debug('No differences to plot')
     else:
         fig3, ax3 = plt.subplots(1)
         non_zero_diff.plot(x=xaxis, y=fieldname + '_Diff', ax=ax3, legend=False,
@@ -539,7 +539,7 @@ def plot_os_histogram(df, num_bins=201, fieldname='SSS1'):
     :param num_bins: number of bins in the histogram.
     :return: a plot of the histogram
     """
-    logging.info('Making histogram...')
+    logging.debug('Making histogram...')
     plt.figure()
     df[fieldname].plot.hist(bins=num_bins)
     plt.title(fieldname)

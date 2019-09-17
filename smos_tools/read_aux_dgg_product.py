@@ -28,7 +28,7 @@ def read_aux_dgg(filename):
 
     data = np.empty(0, dtype=np.dtype(datatype))
 
-    logging.info('Reading AUX_DGG___ file...')
+    logging.debug('Reading AUX_DGG___ file...')
     for i in range(0,10):
         np.fromfile(file, dtype=np.uint64, count=1)[0] # zoneid
         grid_pt_counter = np.fromfile(file, dtype=np.uint32, count=1)[0]
@@ -36,7 +36,7 @@ def read_aux_dgg(filename):
         data = np.concatenate((data, this_zone_data), axis=0)
 
     file.close()
-    logging.info('Done.')
+    logging.debug('Done.')
 
     return data
 
