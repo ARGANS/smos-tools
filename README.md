@@ -2,6 +2,12 @@
 
 Collection of helpful tools relating to SMOS activities (Soil Moisture and Ocean Salinity).
 
+## Version History
+
+| Version | Notes |
+| ------- | ----- |
+| v1.1.0  | Update logging levels and exception raising, for inclusion in Validation Protocol |
+
 ## Requirements
 
 This is a python 3 library.
@@ -26,11 +32,11 @@ To build, `cd` to the root directory containing the `setup.py` and then run
 
 Then (preferably not in the conda environment you are using to develop this)
 
-`cd dist && pip install smos_tools-1.0.1-py3-none-any.whl`
+`cd dist && pip install smos_tools-1.1.0-py3-none-any.whl`
 
 One-liner:
 
-`pip uninstall smos-tools && python setup.py bdist_wheel && pip install dist/smos_tools-1.0.1-py3-none-any.whl`
+`pip uninstall smos-tools && python setup.py bdist_wheel && pip install dist/smos_tools-1.1.0-py3-none-any.whl`
 
 ## Usage
 
