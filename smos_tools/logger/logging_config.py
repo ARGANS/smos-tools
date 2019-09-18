@@ -9,7 +9,7 @@ logging_config = {
     },
     'handlers': {
         'default': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'standard',
             'stream': 'ext://sys.stdout'  # now they don't print as red
@@ -20,7 +20,7 @@ logging_config = {
         # root logger
         '': {
             'handlers': ['default'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True
         }
     }
