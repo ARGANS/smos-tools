@@ -22,6 +22,7 @@ setup(name='smos_tools',
           'pandas',
           'matplotlib',
           'netCDF4',
+          'scipy',
 
       ]
       )
