@@ -21,6 +21,7 @@ setup(name='smos_tools',
           'numpy',
           'pandas',
           'matplotlib',
+          'netCDF4',
 
       ]
       )
