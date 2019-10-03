@@ -144,7 +144,10 @@ def make_test_aux_sss(output_loc):
     """
 
     gpids = np.asarray([1, 2, 3, 4, 5], dtype=np.uint32)
-    asc_sss = np.ones((5, 34), dtype=np.ushort)
+    asc_sss = np.zeros((5, 34), dtype=np.ushort)
+    vals = np.arange(1, 35, dtype=np.ushort)
+    for i in range(0, 5):
+        asc_sss[i, :] = vals
     desc_sss = asc_sss * 2
 
     fout = open(output_loc, 'wb')
