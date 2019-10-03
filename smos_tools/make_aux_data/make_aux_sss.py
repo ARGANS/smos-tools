@@ -72,7 +72,7 @@ def format_aux_sss(input_file):
     :param input_file: The .nc file containing the climatology data
     :return: numpy arrays for gpids and scaled sss_clim
     """
-    dataset = Dataset(asc_file, "r")
+    dataset = Dataset(input_file, "r")
     gpids = np.asarray(dataset.variables["GPID"])
     sss_clim = np.asarray(dataset.variables["SSSmean"]).transpose()
 
@@ -82,7 +82,7 @@ def format_aux_sss(input_file):
 
     # now we need to scale the data to be ushort.
     # * 1000 and truncate
-
+    # should we round here?
     scaled = (no_nans * 1000).astype(np.ushort)
 
     return gpids, scaled
@@ -127,6 +127,15 @@ def make_aux_sss(asc_file, desc_file, output_loc):
     fout.close()
 
 
+def read_acri_clim_manuel(clim_file):
+    clim_dataset = Dataset(clim_file)
+    gp_id = np.array(clim_dataset.variables['GPID'][:], dtype=np.int32)
+    clim = np.array(clim_dataset.variables['SSSmean'][:, :], dtype=np.float32)
+    x_swath = np.array(clim_dataset.variables['xswath'][:], dtype=np.float32)
+    clim_dataset.close()
+
+    return gp_id, clim
+
 def make_test_aux_sss(output_loc):
     """
 
@@ -151,9 +160,12 @@ def make_test_aux_sss(output_loc):
 if __name__ == "__main__":
     asc_file = '/mnt/smos_int/smos/Manuel/SSS_anomaly/01-climatologies/ACRI-ST/SMOSmean_nocorrTB_A_001.nc'
     desc_file = '/mnt/smos_int/smos/Manuel/SSS_anomaly/01-climatologies/ACRI-ST/SMOSmean_nocorrTB_D_001.nc'
+    asc_data, desc_data = read_acri_clim_manuel(asc_file, desc_file)
 
-    # make_aux_sss(asc_file, desc_file, 'SM_OPER_AUX_SSSCLI_20050101T000000_20500101T000000_001_014_3.DBL')
-    # make_test_aux_sss('SM_TEST_AUX_SSSCLI_20050101T000000_20500101T000000_001_014_3.DBL')
-    test_read_aux_sss('/home/rdavies/workspace/SMOS_processor/smos/products/AUX_/'
-                      'SSSCLI/SM_TEST_AUX_SSSCLI_20050101T000000_20500101T000000_001_014_3/'
-                      'SM_TEST_AUX_SSSCLI_20050101T000000_20500101T000000_001_014_3.DBL')
+    my_asc = format_aux_sss(asc_file)
+
+    #make_aux_sss(asc_file, desc_file, 'SM_OPER_AUX_SSSCLI_20050101T000000_20500101T000000_001_014_3.DBL')
+    #make_test_aux_sss('SM_TEST_AUX_SSSCLI_20050101T000000_20500101T000000_001_014_3.DBL')
+    #test_read_aux_sss('/home/rdavies/workspace/SMOS_processor/smos/products/AUX_/'
+    #                  'SSSCLI/SM_TEST_AUX_SSSCLI_20050101T000000_20500101T000000_001_014_3/'
+    #                  'SM_TEST_AUX_SSSCLI_20050101T000000_20500101T000000_001_014_3.DBL')
