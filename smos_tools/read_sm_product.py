@@ -231,7 +231,7 @@ def plot_sm_orbit(smdf, orbit_name, fieldname='Soil_Moisture', vmin=0, vmax=1):
 
     if fieldname == 'Soil_Moisture':
         plt.title('{}: {}'.format(orbit_name, fieldname.replace('_',' ')))
-        cmap = 'viridis_r'
+        cmap = 'viridis'
         c = smdf[fieldname]  # geophysical variable to plot
         m.scatter(smdf['Longitude'].values,
           smdf['Latitude'].values,
@@ -278,7 +278,7 @@ def plot_sm_difference(smdf, orbitnameone, orbitnametwo, fieldname='Soil_Moistur
     fig, m, dot_size = setup_sm_plot(smdf['Latitude'].values, smdf['Longitude'].values)
 
     plt.title('{} : ({}) subtract ({})'.format(fieldname.replace('_',' '), orbitnametwo, orbitnameone))
-    cmap = 'bwr_r'
+    cmap = 'bwr'
     c = smdf[fieldname]  # geophysical variable to plot
     m.scatter(smdf['Longitude'].values,
               smdf['Latitude'].values,
