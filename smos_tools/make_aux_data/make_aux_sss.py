@@ -7,7 +7,8 @@ make_aux_sss: functions to make an AUX_SSS binary file for L2OS
 import struct
 import numpy as np
 from netCDF4 import Dataset
-
+import os
+from datetime import datetime
 
 def test_read_aux_sss(aux_sss_file):
     """
@@ -84,6 +85,17 @@ def format_aux_sss(input_file):
     # * 1000 and truncate
     # should we round here?
     scaled = (no_nans * 1000).astype(np.ushort)
+    print('Input file: {}'.format(input_file))
+    print('Num.valid gpts: {}'.format(len(gpids)))
+    print('Num.valid clim values: {}'.format(len(scaled)))
+    
+    valid_gpt_file = input_file + '_valid.txt'
+    print('Writing info on valid grid points to {}'.format(valid_gpt_file))
+    f = open(valid_gpt_file, 'w')
+    f.write('Input file: {}\n'.format(input_file))
+    f.write('Num.valid gpts: {}\n'.format(len(gpids)))
+    f.write('Num.valid clim values: {}\n'.format(len(scaled)))
+    f.close()
 
     return gpids, scaled
 
@@ -161,13 +173,23 @@ def make_test_aux_sss(output_loc):
 
 
 if __name__ == "__main__":
-    asc_file = '/mnt/smos_int/smos/Manuel/SSS_anomaly/01-climatologies/ACRI-ST/SMOSmean_nocorrTB_A_001.nc'
-    desc_file = '/mnt/smos_int/smos/Manuel/SSS_anomaly/01-climatologies/ACRI-ST/SMOSmean_nocorrTB_D_001.nc'
-    asc_data, desc_data = read_acri_clim_manuel(asc_file, desc_file)
+    asc_file = '/mnt/smos_int/smos/ANOMALY_ACRI/SMOSmean_nocorrTB_A_002.nc'
+    desc_file = '/mnt/smos_int/smos/ANOMALY_ACRI/SMOSmean_nocorrTB_D_002.nc'
+    #asc_data, desc_data = read_acri_clim_manuel(asc_file, desc_file)
+    
+    output_file = 'SM_TEST_AUX_SSSCLI_20050101T000000_20500101T000000_001_002_8.DBL'
+    output_file_info = os.path.basename(output_file).replace('.DBL', '.info')
+    f = open(output_file_info, 'w')
+    f.write('Input netCDF file used for ascending: {}\n'.format(asc_file))
+    f.write('Input netCDF file used for descending: {}\n'.format(desc_file))
+    f.write('Script used for generation: {}, in {}\n'.format(__file__, os.getcwd()))
+    f.write('Creation date: {}'.format(datetime.now()))
+    f.close()
+    
+    #my_asc = format_aux_sss(asc_file)
+    #my_desc = format_aux_sss(desc_file)
+    make_aux_sss(asc_file, desc_file, output_file)
 
-    my_asc = format_aux_sss(asc_file)
-
-    #make_aux_sss(asc_file, desc_file, 'SM_OPER_AUX_SSSCLI_20050101T000000_20500101T000000_001_014_3.DBL')
     #make_test_aux_sss('SM_TEST_AUX_SSSCLI_20050101T000000_20500101T000000_001_014_3.DBL')
     #test_read_aux_sss('/home/rdavies/workspace/SMOS_processor/smos/products/AUX_/'
     #                  'SSSCLI/SM_TEST_AUX_SSSCLI_20050101T000000_20500101T000000_001_014_3/'
