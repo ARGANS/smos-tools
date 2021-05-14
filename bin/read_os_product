@@ -23,8 +23,8 @@ parser.add_argument('--field-name', '-f', default='SSS1',
                     help="Field name to extract and plot. Default 'SSS1'.")
 parser.add_argument('--plot-orbit', '-o', nargs=1, metavar='FILE',
                     help='Plot ocean salinity orbit from UDP file for a requested field name.')
-parser.add_argument('--vmin', '-m', default=-1, help="Minimum value before saturation.")
-parser.add_argument('--vmax', '-M', default=+1, help="Maximum value before saturation.")
+parser.add_argument('--vmin', '-m', help="Minimum value before saturation.")
+parser.add_argument('--vmax', '-M', help="Maximum value before saturation.")
 parser.add_argument('--x-axis', '-x', default='Latitude', help="Abscissas over wich to plot the filedname. One of: {'Latitude', 'Grid_Point_ID'}.")
 
 args = parser.parse_args()

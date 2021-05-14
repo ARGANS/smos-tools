@@ -111,9 +111,9 @@ def extract_field(data, fieldname='SSS1'):
         raise KeyError("{} not in Geophysical_Parameters_Data or Product_Confidence_Descriptors".format(fieldname))
 
     if fieldname in ['Dg_chi2_1', 'Dg_chi2_2']:
-        field_frame = pd.DataFrame(data[dict_part][fieldname]/100., columns=[fieldname])
+        field_frame = pd.DataFrame(data[dict_part][fieldname]/100., columns=[fieldname]).astype(np.float16)
     else:
-        field_frame = pd.DataFrame(data[dict_part][fieldname], columns=[fieldname])
+        field_frame = pd.DataFrame(data[dict_part][fieldname], columns=[fieldname]).astype(np.float16)
 
     dataframe = pd.concat([time_frame,
                            gridpoint_id_frame, lat_frame, lon_frame, field_frame], axis=1)
@@ -344,7 +344,7 @@ def plot_os_orbit(os_df, fieldname='SSS1', vmin=None, vmax=None):
     
     if fieldname in ['SSS1', 'SSS2']:
         plt.title(fieldname)
-        cmap = 'viridis'
+        cmap = 'jet'
         c = os_df[fieldname]  # geophysical variable to plot
         if vmin == None:
             vmin = 32.
@@ -405,7 +405,7 @@ def plot_os_orbit(os_df, fieldname='SSS1', vmin=None, vmax=None):
 
     else:
         plt.title(fieldname)
-        cmap = 'viridis'
+        cmap = 'jet'
         c = os_df[fieldname] # geophysical variable to plot
         m.scatter(os_df['Longitude'].values,
                   os_df['Latitude'].values,
@@ -432,11 +432,9 @@ def plot_os_difference(os_df, fieldname='SSS1', vmin=-1, vmax=+1):
     logging.debug('Plotting {} ...'.format(fieldname))
 
     figure, m, dot_size = setup_os_plot(os_df['Latitude'].values, os_df['Longitude'].values)
-
     plt.title(fieldname)
     cmap = 'bwr'
     c = os_df[fieldname]  # geophysical variable to plot
-
     m.scatter(os_df['Longitude'].values,
               os_df['Latitude'].values,
               latlon=True,
@@ -447,7 +445,6 @@ def plot_os_difference(os_df, fieldname='SSS1', vmin=-1, vmax=+1):
               vmin=vmin,
               vmax=vmax)
     cbar = m.colorbar()
-
     plt.show()
 
 
@@ -516,17 +513,17 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1', vmin=-1, vmax=+1, xaxi
     ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
     fig2.tight_layout()
 
-    # plot only the ones with a non-zero difference?
-    non_zero_diff = common[common[fieldname + '_Diff'] != 0]
-    if non_zero_diff.empty:
-        logging.debug('No differences to plot')
-    else:
-        fig3, ax3 = plt.subplots(1)
-        non_zero_diff.plot(x=xaxis, y=fieldname + '_Diff', ax=ax3, legend=False,
-                           rot=90, fontsize=8, clip_on=False, style='o')
-        ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
-        ax3.set_ylabel(fieldname + ' Diff')
-        fig3.tight_layout()
+   # # plot only the ones with a non-zero difference?
+   # non_zero_diff = common[common[fieldname + '_Diff'] != 0]
+   # if non_zero_diff.empty:
+   #     logging.debug('No differences to plot')
+   # else:
+   #     fig3, ax3 = plt.subplots(1)
+   #     non_zero_diff.plot(x=xaxis, y=fieldname + '_Diff', ax=ax3, legend=False,
+   #                        rot=90, fontsize=8, clip_on=False, style='o')
+   #     ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
+   #     ax3.set_ylabel(fieldname + ' Diff')
+   #     fig3.tight_layout()
 
     plt.show()
 
