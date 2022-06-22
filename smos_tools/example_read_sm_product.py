@@ -14,6 +14,7 @@ if __name__ == '__main__':
     # Included test data
     schema_path = 'schema/DBL_SM_XXXX_MIR_SMUDP2_0400.binXschema.xml'
     data_path = 'data/SM_TEST_MIR_SMUDP2_20150721T102717_20150721T112036_650_001_9.DBL'
+    save_dir_location = 'plots'
 
     field = 'Soil_Moisture'
 
@@ -33,5 +34,5 @@ if __name__ == '__main__':
     sm_df_mod.at[(5680, 39050, 378980, 1204344), 'Soil_Moisture'] = -999.0  # 0.086155
 
     # Call function to evaluate the difference between the two
-    read_sm_product.evaluate_field_diff(sm_df, sm_df_mod, field, "Orbit1", "Orbit2")
+    read_sm_product.evaluate_field_diff(sm_df, sm_df_mod, field, "Orbit1", "Orbit2", save_fig_directory=save_dir_location)
 
