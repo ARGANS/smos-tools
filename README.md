@@ -7,6 +7,7 @@ Collection of helpful tools relating to SMOS activities (Soil Moisture and Ocean
 | Version | Notes |
 | ------- | ----- |
 | v1.1.0  | Update logging levels and exception raising, for inclusion in Validation Protocol |
+| v1.2.0  | Add ability to save figures |
 
 ## Requirements
 
@@ -20,6 +21,12 @@ Required packages:
 - pandas
 - setuptools
 
+Create conda env:
+
+```bash
+conda create --name smos_tools_develop python=3 Basemap numpy matplotlib pandas setuptools
+```
+
 ## Installing
 
 Uninstall any previous version of SMOS Tools you may have installed with
@@ -32,11 +39,13 @@ To build, `cd` to the root directory containing the `setup.py` and then run
 
 Then (preferably not in the conda environment you are using to develop this)
 
-`cd dist && pip install smos_tools-1.1.0-py3-none-any.whl`
+`cd dist && pip install smos_tools-1.2.0-py3-none-any.whl`
 
 One-liner:
 
-`pip uninstall smos-tools && python setup.py bdist_wheel && pip install dist/smos_tools-1.1.0-py3-none-any.whl`
+```bash
+pip uninstall smos-tools && python setup.py bdist_wheel && pip install dist/smos_tools-1.2.0-py3-none-any.whl
+```
 
 ## Usage
 
