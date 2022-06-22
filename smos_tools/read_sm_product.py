@@ -166,8 +166,9 @@ def evaluate_field_diff(smdf1, smdf2, fieldname, orbitnameone, orbitnametwo, vmi
             save_name = 'diff-scatter-({})-subtr-({})-field-({})-{}.png'.format(orbitnametwo, orbitnameone, fieldname.replace(' ', ''), datetime.now().strftime('%Y%m%d-%H%M%S'))
             logging.debug('Attempting to save figure with name "{}"'.format(save_name))
             plt.savefig(os.path.join(save_fig_directory, save_name))
-
-        plt.show()
+            plt.close()
+        else:
+            plt.show()
 
 def setup_sm_plot(lat, long):
     fig1 = plt.figure()
@@ -270,8 +271,9 @@ def plot_sm_orbit(smdf, orbit_name, fieldname='Soil_Moisture', vmin=0, vmax=1, s
         save_name = 'orbit-({})-field-({})-{}.png'.format(orbit_name, fieldname.replace(' ', ''), datetime.now().strftime('%Y%m%d-%H%M%S'))
         logging.debug('Attempting to save figure with name "{}"'.format(save_name))
         plt.savefig(os.path.join(save_fig_directory, save_name))
-
-    plt.show()
+        plt.close()
+    else:
+        plt.show()
 
 
 def plot_sm_difference(smdf, orbitnameone, orbitnametwo, fieldname='Soil_Moisture', vmin=-1, vmax=1, save_fig_directory=None):
@@ -308,8 +310,9 @@ def plot_sm_difference(smdf, orbitnameone, orbitnametwo, fieldname='Soil_Moistur
         save_name = 'diff-orbit-({})-subtr-({})-field-({})-{}.png'.format(orbitnametwo, orbitnameone, fieldname.replace(' ', ''), datetime.now().strftime('%Y%m%d-%H%M%S'))
         logging.debug('Attempting to save figure with name "{}"'.format(save_name))
         plt.savefig(os.path.join(save_fig_directory, save_name))
-
-    plt.show()
+        plt.close()
+    else:
+        plt.show()
 
 
 if __name__ == '__main__':
