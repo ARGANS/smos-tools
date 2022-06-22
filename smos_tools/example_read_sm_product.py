@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     # Included test data
     schema_path = 'schema/DBL_SM_XXXX_MIR_SMUDP2_0400.binXschema.xml'
-    data_path = 'data/SM_TEST_MIR_SMUDP2_20150721T102717_20150721T112036_650_001_9.DBL'
+    data_path = '/mnt/smos_int/smos/smos_l2sm/test-orbits/720rc2-nom/output/SM_TEST_MIR_SMUDP2_20180530T044823_20180530T054143_720_001_1/SM_TEST_MIR_SMUDP2_20180530T044823_20180530T054143_720_001_1.DBL'
 
     field = 'Soil_Moisture'
 

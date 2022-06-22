@@ -9,7 +9,7 @@ import sys
 import logging
 import logging.config
 
-from smos_tools.data_types.sm_udp_datatype import datatype
+from smos_tools.data_types.sm_udp_datatype import datatype, confidence_flags, science_flags
 from smos_tools.logger.logging_config import logging_config
 
 
@@ -52,10 +52,17 @@ def extract_field(data, fieldname):
     base_frame = pd.DataFrame(data)
     time_frame = pd.DataFrame(data['Mean_Acq_Time'])
     retrieval_frame = pd.DataFrame(data['Retrieval_Results_Data'])
+    science_fl_frame = pd.DataFrame(data['Science_Descriptors_Data'])
+    # ('Science_Flags', np.uint32),
+    confidence_fl_frame = pd.DataFrame(data['Confidence_Descriptors_Data'])
+    # ('Confidence_Flags', np.uint16),
 
     # Look to see if user requested fieldname exists.
-    if fieldname not in retrieval_frame.columns.values:
-        logging.error("ERROR: Couldn't find fieldname '{}' in 'Retrieval_Results_Data'".format(fieldname))
+    if fieldname in science_flags:
+    elif fieldname in confidence_flags:
+    elif fieldname in retrieval_frame.columns.values:
+    else:
+        logging.error("ERROR: Couldn't find fieldname '{}' in 'Retrieval_Results_Data', 'Science_Flags', or 'Confidence_Flags'".format(fieldname))
         raise KeyError("{} not one of {}".format(fieldname, retrieval_frame.columns.values))
 
     # Make a dataframe with the columns we care about
