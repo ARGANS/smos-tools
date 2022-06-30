@@ -1,6 +1,6 @@
 logging_config = {
     'version': 1,
-    'disable_existing_loggers': False,  # this stops overriding existing loggers
+    'disable_existing_loggers': True,  # False stops overriding existing loggers. We only care about our own DEBUG logs so True
     'formatters': {
         'standard': {
             'format': '%(asctime)s [%(filename)s - %(levelname)s]: %(message)s',
