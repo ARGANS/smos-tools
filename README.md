@@ -19,9 +19,11 @@ Required packages:
 - numpy
 - matplotlib
 - pandas
+- netCDF4
+- scipy
 - setuptools
 
-Create conda env:
+Create conda env (also brings in some deps listed above):
 
 ```bash
 conda create --name smos_tools_develop python=3 Basemap numpy matplotlib pandas setuptools
@@ -83,6 +85,7 @@ The options are:
 - `--vmin`, `-m` : Minimum y-axis value (used by orbit plots, will saturate at this value, default: `-1`)
 - `--vmax`, `-M` : Maximum y-axis value (used by orbit plots, will saturate at this value, default: `1`)
 - `--x-axis`, `-x` : X-axis variable to use for point-value plot (default: `Latitude`)
+- `--save-directory DIRECTORY`, `-s DIRECTORY` : Optional directory to save plots and figures to instead of displaying to scree.
 
 Example usage:
 
