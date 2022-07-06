@@ -174,7 +174,8 @@ def evaluate_field_diff(smdf1, smdf2, fieldname, orbitnameone, orbitnametwo, vmi
             plt.show()
 
 def setup_sm_plot(lat, long):
-    fig1 = plt.figure()
+    # Pixels = size * dpi i.e. 10" * 100dpi = 1,000px
+    fig1 = plt.figure(figsize=(8, 8), dpi=100) # 800x800
     # Set up plot
     # find a central lon and lat
     centre_lon = long.mean()
