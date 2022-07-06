@@ -111,14 +111,18 @@ def extract_field(data, fieldname='SSS1'):
         raise KeyError("{} not in Geophysical_Parameters_Data or Product_Confidence_Descriptors".format(fieldname))
 
     if fieldname in ['Dg_chi2_1', 'Dg_chi2_2']:
-        field_frame = pd.DataFrame(data[dict_part][fieldname]/100., columns=[fieldname])
+        field_frame = pd.DataFrame(data[dict_part][fieldname]/100., columns=[fieldname]).astype(np.float32)
     else:
-        field_frame = pd.DataFrame(data[dict_part][fieldname], columns=[fieldname])
+        field_frame = pd.DataFrame(data[dict_part][fieldname], columns=[fieldname]).astype(np.float32)
 
     dataframe = pd.concat([time_frame,
                            gridpoint_id_frame, lat_frame, lon_frame, field_frame], axis=1)
 
-    dataframe = dataframe.replace(-999, np.NaN)
+    if fieldname in ['Dg_chi2_1', 'Dg_chi2_2']:
+        dataframe = dataframe.replace(0, np.NaN)
+    else:
+        dataframe = dataframe.replace(-999, np.NaN)
+    
     dataframe.dropna(axis=0, inplace=True)
     
     return dataframe
@@ -344,7 +348,7 @@ def plot_os_orbit(os_df, fieldname='SSS1', vmin=None, vmax=None):
     
     if fieldname in ['SSS1', 'SSS2']:
         plt.title(fieldname)
-        cmap = 'viridis'
+        cmap = 'jet'
         c = os_df[fieldname]  # geophysical variable to plot
         if vmin == None:
             vmin = 32.
@@ -387,10 +391,10 @@ def plot_os_orbit(os_df, fieldname='SSS1', vmin=None, vmax=None):
         plt.title('Chi2')
         cmap = 'jet'
         c = os_df[fieldname]
-        if vmin == None:
-            vmin = 1.0
-        if  vmax== None:
-            vmax = 1.3
+        #if vmin == None:
+        #    vmin = 1.0
+        #if  vmax== None:
+        #    vmax = 1.3
         m.scatter(os_df['Longitude'].values,
                   os_df['Latitude'].values,
                   latlon=True,
@@ -405,7 +409,7 @@ def plot_os_orbit(os_df, fieldname='SSS1', vmin=None, vmax=None):
 
     else:
         plt.title(fieldname)
-        cmap = 'viridis'
+        cmap = 'jet'
         c = os_df[fieldname] # geophysical variable to plot
         m.scatter(os_df['Longitude'].values,
                   os_df['Latitude'].values,
@@ -414,6 +418,8 @@ def plot_os_orbit(os_df, fieldname='SSS1', vmin=None, vmax=None):
                   s=dot_size,
                   zorder=10,
                   cmap=cmap,
+                  vmin=vmin,
+                  vmax=vmax
                   )
         cbar = m.colorbar()
 
@@ -432,11 +438,9 @@ def plot_os_difference(os_df, fieldname='SSS1', vmin=-1, vmax=+1):
     logging.debug('Plotting {} ...'.format(fieldname))
 
     figure, m, dot_size = setup_os_plot(os_df['Latitude'].values, os_df['Longitude'].values)
-
     plt.title(fieldname)
     cmap = 'bwr'
     c = os_df[fieldname]  # geophysical variable to plot
-
     m.scatter(os_df['Longitude'].values,
               os_df['Latitude'].values,
               latlon=True,
@@ -447,7 +451,6 @@ def plot_os_difference(os_df, fieldname='SSS1', vmin=-1, vmax=+1):
               vmin=vmin,
               vmax=vmax)
     cbar = m.colorbar()
-
     plt.show()
 
 
@@ -508,25 +511,28 @@ def evaluate_field_diff(frame1, frame2, fieldname='SSS1', vmin=-1, vmax=+1, xaxi
 
     plot_os_histogram(common, fieldname=fieldname + '_Diff')
 
+    if 'chi2' in fieldname:
+        plot_2d_scatt(common[fieldname+'_x'].values, common[fieldname+'_y'].values, fieldname=fieldname, bins=50-1)
+
     fig2, ax2 = plt.subplots(1)
     # plot each difference against the index grid point id
     common.plot(x=xaxis, y=fieldname + '_Diff', ax=ax2, legend=False, rot=90,
-                fontsize=8, clip_on=False, style='o')
+                fontsize=8, clip_on=False, style='+', alpha=0.5)
     ax2.set_ylabel(fieldname + ' Diff')
     ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
     fig2.tight_layout()
 
-    # plot only the ones with a non-zero difference?
-    non_zero_diff = common[common[fieldname + '_Diff'] != 0]
-    if non_zero_diff.empty:
-        logging.debug('No differences to plot')
-    else:
-        fig3, ax3 = plt.subplots(1)
-        non_zero_diff.plot(x=xaxis, y=fieldname + '_Diff', ax=ax3, legend=False,
-                           rot=90, fontsize=8, clip_on=False, style='o')
-        ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
-        ax3.set_ylabel(fieldname + ' Diff')
-        fig3.tight_layout()
+   # # plot only the ones with a non-zero difference?
+   # non_zero_diff = common[common[fieldname + '_Diff'] != 0]
+   # if non_zero_diff.empty:
+   #     logging.debug('No differences to plot')
+   # else:
+   #     fig3, ax3 = plt.subplots(1)
+   #     non_zero_diff.plot(x=xaxis, y=fieldname + '_Diff', ax=ax3, legend=False,
+   #                        rot=90, fontsize=8, clip_on=False, style='o')
+   #     ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
+   #     ax3.set_ylabel(fieldname + ' Diff')
+   #     fig3.tight_layout()
 
     plt.show()
 
@@ -545,9 +551,46 @@ def plot_os_histogram(df, num_bins=201, fieldname='SSS1'):
     plt.title(fieldname)
     plt.show()
 
-    print('mean: ', df[fieldname].mean())
-    print('median: ', df[fieldname].median())
-    print('std :', df[fieldname].std())
+    print('mean: ', np.mean(df[fieldname].values))
+    print('median: ', np.median(df[fieldname].values))
+    print('std :', np.std(df[fieldname].values))
+    print('N :', len(df[fieldname].values))
+    print('---') 
+    print('mean (of values which differ): ', np.mean(df[fieldname].values[df[fieldname].values!=0]))
+    print('median (of values which differ): ', np.median(df[fieldname].values[df[fieldname].values!=0]))
+    print('std (of values which differ):', np.std(df[fieldname].values[df[fieldname].values!=0]))
+    print('N (of values which differ):', len(df[fieldname].values[df[fieldname].values!=0]))
+
+def plot_2d_scatt(x, y, fieldname, bins):
+
+    threshold = np.min((3*np.std(x), 3*np.std(y)))
+    if (3*np.std(x) < 3*np.std(y)):
+        ind = (x<threshold) & (x-y!=0)# & (x!=0) & (y!=0)
+        x = x[ind]
+        y = y[ind]
+    else:
+        ind = (y<threshold) & (x-y!=0)# & (x!=0) & (y!=0)
+        x = x[ind]
+        y = y[ind] 
+
+    m, q = np.polyfit(x, y, 1)
+    print('m={},q={}'.format(m,q))
+    rho = np.corrcoef(x,y)[0, 1]
+    print('rho={}'.format(rho))
+    #plt.plot(x, m*x + q, color='r', label='regr.line')
+    plt.plot(x, x, color='k', label='1-to-1 line')
+    if 'Dg_chi2_' in fieldname:
+        plt.hist2d(x, y, bins, range=np.array([[0.8,2],[0.8,2]]), cmap='jet')
+    else:
+        plt.hist2d(x, y, bins)
+    plt.title('Scatter {} VS reference {}'.format(fieldname, fieldname))
+    plt.xlabel('{} '.format(fieldname))
+    plt.ylabel('{} ref'.format(fieldname))
+    plt.legend(loc="best")
+    cbar = plt.colorbar()
+    cbar.ax.set_ylabel('Counts')
+    
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -559,14 +602,16 @@ if __name__ == '__main__':
     #     'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0/' \
     #     'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_671_001_0.DBL'
 
-    udp1 = '/mnt/smos_data/smos/data/2014/10/18/SM_REPR_MIR_OSUDP2_20141018T034031_20141018T043344_662_320_1/' \
-            'SM_REPR_MIR_OSUDP2_20141018T034031_20141018T043344_662_320_1.DBL'
+    udp1 = '/mnt/smos_int/smos/smos_l2os/builds/v704b3/TDS_RFIasia_snapTh2_L1v724/Outputs/SM_TEST_MIR_OSUDP2_20160304T090118_20160304T095418_700_001_0/' \
+            'SM_TEST_MIR_OSUDP2_20160304T090118_20160304T095418_700_001_0.DBL'
     # udp2 = '/home/famico/repos/SMOS-L2OS-Processor/Outputs_v673/' \
     #     'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0/' \
     #     'SM_TEST_MIR_OSUDP2_20110501T141050_20110501T150408_673_001_0.DBL'
 
-    udp2 = '/home/rdavies/workspace/EO_CFI/Output/SM_TEST_MIR_OSUDP2_20141018T034031_20141018T043344_673_001_0/' \
-            'SM_TEST_MIR_OSUDP2_20141018T034031_20141018T043344_673_001_0.DBL'
+    #udp2 = '/mnt/smos_int/smos/smos_l2os/builds/v702b1/TDS_DNB_OFF_L1v724OTT/Outputs/SM_TEST_MIR_OSUDP2_20160304T090118_20160304T095418_700_001_0/' \
+    #        'SM_TEST_MIR_OSUDP2_20160304T090118_20160304T095418_700_001_0.DBL'
+    udp2 = '/mnt/smos_int/smos/smos_l2os/builds/v704b3/TDS_RFIasia_snapOFF_L1v724OTT/Outputs/SM_TEST_MIR_OSUDP2_20160304T090118_20160304T095418_700_001_0/' \
+            'SM_TEST_MIR_OSUDP2_20160304T090118_20160304T095418_700_001_0.DBL'
 
 
     dir_isas = '/mnt/smos_int/smos/Manuel/ISAS/ISAS2015'
@@ -587,7 +632,7 @@ if __name__ == '__main__':
     data2 = read_os_udp(udp2)
     df2 = extract_field(data2, fieldname='Dg_chi2_1')
     #print(df2)
-    read_and_interpolate_isas(os.path.join(dir_isas, filename_isas), return_df=True)
+    #read_and_interpolate_isas(os.path.join(dir_isas, filename_isas), return_df=True)
 
     #plot_os_bias(udp1, os.path.join(dir_isas, filename_isas))
     #plot_os_bias(udp2, os.path.join(dir_isas, filename_isas))
@@ -595,6 +640,6 @@ if __name__ == '__main__':
     #df = extract_interpolated_field(data1)
     #plot_os_orbit(df)
 
-    # evaluate_field_diff(df2, df1, fieldname='Dg_chi2_1', vmin=-0.01, vmax=0.01, xaxis='Latitude')
+    evaluate_field_diff(df2, df1, fieldname='Dg_chi2_1', vmin=-0.2, vmax=0.2, xaxis='Latitude')
     #plot_os_orbit(df1, fieldname='Dg_chi2_1', vmin=1, vmax=1.2)
 

@@ -33,6 +33,7 @@ diff_parser.add_argument('--field-name', '-f', default='Soil_Moisture',
 diff_parser.add_argument('--vmin', '-m', default=-1, help="Minimum value before saturation.")
 diff_parser.add_argument('--vmax', '-M', default=1, help="Maximum value before saturation.")
 diff_parser.add_argument('--x-axis', '-x', default='Latitude', help="Abscissas over which to plot the fieldname. One of: {'Latitude', 'Grid_Point_ID'}.")
+diff_parser.add_argument('--save-directory', '-s', default=None, help="Optional directory to save plots and figures to")
 
 # Plot orbit
 orbit_parser.add_argument('--orbit-file', '-o', nargs=1, metavar='FILE',
@@ -45,6 +46,7 @@ orbit_parser.add_argument('--field-name', '-f', default='Soil_Moisture',
 orbit_parser.add_argument('--vmin', '-m', default=-1, help="Minimum value before saturation.")
 orbit_parser.add_argument('--vmax', '-M', default=1, help="Maximum value before saturation.")
 orbit_parser.add_argument('--x-axis', '-x', default='Latitude', help="Abscissas over which to plot the fieldname. One of: {'Latitude', 'Grid_Point_ID'}.")
+orbit_parser.add_argument('--save-directory', '-s', default=None, help="Optional directory to save plots and figures to")
 
 args = parser.parse_args()
 
@@ -56,11 +58,16 @@ if args.mode == 'plot-diff' or args.mode == 'diff':
     field = args.field_name
     name1 = args.orbit_name[0]
     name2 = args.orbit_name[1]
+    if (args.save_directory != None):
+        savedir = os.path.abspath(args.save_directory)
+    else:
+        savedir = None
 
     print('Plot difference UDP 1 -> UDP 2 (ie. OLD -> NEW)')
     print('    {} -> {}'.format(name1, name2))
     print('UDP file 1: {}'.format(name1))
     print('    {}'.format(file1))
+
     fail = False
     if not os.path.isfile(file1):
         print('ERROR: UDP file not found.')
@@ -73,6 +80,13 @@ if args.mode == 'plot-diff' or args.mode == 'diff':
     if fail:
         sys.exit(1)
 
+    if savedir != None:
+        if not os.path.isdir(savedir):
+            print('WARN: Save directory does not exist.\n    {}'.format(savedir))
+            savedir = None
+        else:
+            print('Save figures to directory:\n    {}'.format(savedir))
+
     # check these files are for the same orbit, else error
     head, tail1 = os.path.split(file1)
     head, tail2 = os.path.split(file2)
@@ -84,13 +98,17 @@ if args.mode == 'plot-diff' or args.mode == 'diff':
 
     dataframe1 = read_sm_product.extract_field(read_sm_product.read_sm_product(file1), field)
     dataframe2 = read_sm_product.extract_field(read_sm_product.read_sm_product(file2), field)
-    read_sm_product.evaluate_field_diff(dataframe1, dataframe2, field, name1, name2, vmin=args.vmin, vmax=args.vmax, xaxis=args.x_axis)
+    read_sm_product.evaluate_field_diff(dataframe1, dataframe2, field, name1, name2, vmin=args.vmin, vmax=args.vmax, xaxis=args.x_axis, save_fig_directory=savedir)
 
 elif args.mode == 'plot-orbit' or args.mode == 'plot':
     # Requested to plot the SM values for the specific orbit
     filename = os.path.abspath(args.orbit_file[0])
     field = args.field_name
-    name = args.orbit_name
+    name = args.orbit_name[0]
+    if (args.save_directory != None):
+        savedir = os.path.abspath(args.save_directory)
+    else:
+        savedir = None
     print('UDP file: {}'.format(name))
     print('    {}'.format(filename))
 
@@ -100,10 +118,18 @@ elif args.mode == 'plot-orbit' or args.mode == 'plot':
         fail = True
     if fail:
         sys.exit(1)
+
+    if savedir != None:
+        if not os.path.isdir(savedir):
+            print('WARN: Save directory does not exist.\n    {}'.format(savedir))
+            savedir = None
+        else:
+            print('Save figures to directory:\n    {}'.format(savedir))
+
     print('Extracting field: {}.'.format(field))
     dataframe = read_sm_product.extract_field(read_sm_product.read_sm_product(filename), field)
 
-    read_sm_product.plot_sm_orbit(dataframe, name, fieldname=field, vmin=args.vmin, vmax=args.vmax)
+    read_sm_product.plot_sm_orbit(dataframe, name, fieldname=field, vmin=args.vmin, vmax=args.vmax, save_fig_directory=savedir)
 else:
     # For now this is the only possible command
     print('ERROR: Invalid or no flags given.')

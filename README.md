@@ -7,6 +7,7 @@ Collection of helpful tools relating to SMOS activities (Soil Moisture and Ocean
 | Version | Notes |
 | ------- | ----- |
 | v1.1.0  | Update logging levels and exception raising, for inclusion in Validation Protocol |
+| v1.2.0  | Add ability to save figures |
 
 ## Requirements
 
@@ -18,7 +19,15 @@ Required packages:
 - numpy
 - matplotlib
 - pandas
+- netCDF4
+- scipy
 - setuptools
+
+Create conda env (also brings in some deps listed above):
+
+```bash
+conda create --name smos_tools_develop python=3 Basemap numpy matplotlib pandas setuptools
+```
 
 ## Installing
 
@@ -32,11 +41,13 @@ To build, `cd` to the root directory containing the `setup.py` and then run
 
 Then (preferably not in the conda environment you are using to develop this)
 
-`cd dist && pip install smos_tools-1.1.0-py3-none-any.whl`
+`cd dist && pip install smos_tools-1.2.0-py3-none-any.whl`
 
 One-liner:
 
-`pip uninstall smos-tools && python setup.py bdist_wheel && pip install dist/smos_tools-1.1.0-py3-none-any.whl`
+```bash
+pip uninstall smos-tools && python setup.py bdist_wheel && pip install dist/smos_tools-1.2.0-py3-none-any.whl
+```
 
 ## Usage
 
@@ -81,10 +92,10 @@ The options are:
 - `--orbit-file FILE1 FILE2`, `-o FILE1 FILE2` : Direct path to one or more SM `UDP` `.DBL` files to evaluate
 - `--orbit-name NAME1 NAME2`, `-n NAME1 NAME2` : Name to associate to each orbit, for plot output etc.
 - `--field-name NAME`, `-f NAME` : Field name to plot. Default is `Soil_Moisture`.
-- `--plot-orbit FILE`, `-o FILE` : Plot the Soil Moisture orbit from `UDP` file.
-- `--vmin VALUE`, `-m VALUE` : Plots all values greater than VALUE. If smaller, saturate.
-- `--vmax VALUE`, `-M VALUE` : Plots all values smaller than VALUE. If higher, saturate.
-- `--x-axis NAME`, `-x NAME` : Varible againt which the fieldname is plotted. NAME is of: {'Latitude', 'Grid_Point_ID'}.
+- `--vmin`, `-m` : Minimum y-axis value (used by orbit plots, will saturate at this value, default: `-1`)
+- `--vmax`, `-M` : Maximum y-axis value (used by orbit plots, will saturate at this value, default: `1`)
+- `--x-axis`, `-x` : X-axis variable to use for point-value plot (default: `Latitude`)
+- `--save-directory DIRECTORY`, `-s DIRECTORY` : Optional directory to save plots and figures to instead of displaying to scree.
 
 Example usage:
 

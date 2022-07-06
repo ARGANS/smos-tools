@@ -3,11 +3,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
-import argparse
 import os
-import sys
 import logging
 import logging.config
+from datetime import datetime
 
 from smos_tools.data_types.sm_udp_datatype import datatype
 from smos_tools.logger.logging_config import logging_config
@@ -75,7 +74,7 @@ def extract_field(data, fieldname):
     return extracted_data
 
 
-def evaluate_field_diff(smdf1, smdf2, fieldname, orbitnameone, orbitnametwo, vmin=-1, vmax=1, xaxis='Latitude'):
+def evaluate_field_diff(smdf1, smdf2, fieldname, orbitnameone, orbitnametwo, vmin=-1, vmax=1, xaxis='Latitude', save_fig_directory=None):
     """
     Plot the difference between two dataframes for a given field. Gives map plots and scatter.
     Difference is dataframe2 - dataframe1
@@ -85,6 +84,7 @@ def evaluate_field_diff(smdf1, smdf2, fieldname, orbitnameone, orbitnametwo, vmi
     :param vmin: Minimum value visible on plot. Lower values saturate.
     :param vmax: Maximum value visible on plot. Higher values saturate.
     :param xaxis: Variable against which the variable is plotted. One of: {'Latitude', 'Grid_Point_ID'}
+    :param save_fig_directory: Optional directory to save difference figures to, when None no figure is saved
     :return:
     """
     logging.debug("Evaluating difference between 2 dataframes for field '{}'...".format(fieldname))
@@ -139,30 +139,39 @@ def evaluate_field_diff(smdf1, smdf2, fieldname, orbitnameone, orbitnametwo, vmi
 
     # Get records in common that are same/diff
 
-    plot_sm_difference(common, orbitnameone, orbitnametwo, fieldname=fieldname+'_Diff', vmin=vmin, vmax=vmax)
-
-    #fig2, ax2 = plt.subplots(1)
-    ## plot each difference against the index grid point id
-    #common.plot(x=xaxis, y=fieldname+'_Diff', ax=ax2, legend=False, rot=90,
-    #            fontsize=8, clip_on=False, style='o')
-    #ax2.set_ylabel(fieldname + ' Diff')
-    #ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
-    #fig2.tight_layout()
-
-    # plot only the ones with a non-zero difference?
+    # Make plots only if we have differences
     if non_zero_diff.empty:
         logging.debug('No differences to plot')
     else:
+        # First plot (geographic map)
+        plot_sm_difference(common, orbitnameone, orbitnametwo, fieldname=fieldname+'_Diff', vmin=vmin, vmax=vmax, save_fig_directory=save_fig_directory)
+
+        #fig2, ax2 = plt.subplots(1)
+        ## plot each difference against the index grid point id
+        #common.plot(x=xaxis, y=fieldname+'_Diff', ax=ax2, legend=False, rot=90,
+        #            fontsize=8, clip_on=False, style='o')
+        #ax2.set_ylabel(fieldname + ' Diff')
+        #ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
+        #fig2.tight_layout()
+
+        # Second plot (scatter plot, diff by lat)
+        # Plot only the ones with a non-zero difference
         fig3, ax3 = plt.subplots(1)
-        plt.title('{} : ({}) subtract ({})'.format(fieldname.replace('_',' '), orbitnametwo, orbitnameone))
+        plt.title('{} : ({}) subtract ({})'.format(fieldname.replace('_',' '), orbitnametwo, orbitnameone), wrap=True)
         non_zero_diff.plot(x=xaxis, y=fieldname+'_Diff', ax=ax3, legend=False,
                            rot=90, fontsize=8, clip_on=False, style='o')
         ax3.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
         ax3.set_ylabel(fieldname + ' Diff')
         fig3.tight_layout()
 
-    plt.show()
-
+        if (save_fig_directory != None):
+            # Requested to save the figure
+            save_name = 'diff-scatter-({})-subtr-({})-field-({})-{}.png'.format(orbitnametwo, orbitnameone, fieldname.replace(' ', ''), datetime.now().strftime('%Y%m%d-%H%M%S'))
+            logging.debug('Attempting to save figure with name "{}"'.format(save_name))
+            plt.savefig(os.path.join(save_fig_directory, save_name))
+            plt.close()
+        else:
+            plt.show()
 
 def setup_sm_plot(lat, long):
     fig1 = plt.figure()
@@ -216,7 +225,7 @@ def setup_sm_plot(lat, long):
 
 
 # Plot a SM orbit from a pandas dataframe
-def plot_sm_orbit(smdf, orbit_name, fieldname='Soil_Moisture', vmin=0, vmax=1):
+def plot_sm_orbit(smdf, orbit_name, fieldname='Soil_Moisture', vmin=0, vmax=1, save_fig_directory=None):
     """
      Plot the soil moisture orbit. Gives map plots and scatter.
 
@@ -230,8 +239,8 @@ def plot_sm_orbit(smdf, orbit_name, fieldname='Soil_Moisture', vmin=0, vmax=1):
     fig, m, dot_size = setup_sm_plot(smdf['Latitude'].values, smdf['Longitude'].values)
 
     if fieldname == 'Soil_Moisture':
-        plt.title('{}: {}'.format(orbit_name, fieldname.replace('_',' ')))
-        cmap = 'viridis_r'
+        plt.title('{} : {}'.format(fieldname.replace('_',' '), orbit_name), wrap=True)
+        cmap = 'viridis'
         c = smdf[fieldname]  # geophysical variable to plot
         m.scatter(smdf['Longitude'].values,
           smdf['Latitude'].values,
@@ -247,7 +256,7 @@ def plot_sm_orbit(smdf, orbit_name, fieldname='Soil_Moisture', vmin=0, vmax=1):
         cbar.set_label(r'[m$^3$/m$^3$]')
 
     else:
-        plt.title('{}: {}'.format(orbit_name, fieldname.replace('_',' ')))
+        plt.title('{} : {}'.format(fieldname.replace('_',' '), orbit_name), wrap=True)
         cmap = 'viridis'
         c = smdf[fieldname] # geophysical variable to plot 
         m.scatter(smdf['Longitude'].values,
@@ -260,25 +269,33 @@ def plot_sm_orbit(smdf, orbit_name, fieldname='Soil_Moisture', vmin=0, vmax=1):
           )    
         cbar = m.colorbar()
 
-    plt.show()
+    if (save_fig_directory != None):
+        # Requested to save the figure
+        save_name = 'orbit-({})-field-({})-{}.png'.format(orbit_name, fieldname.replace(' ', ''), datetime.now().strftime('%Y%m%d-%H%M%S'))
+        logging.debug('Attempting to save figure with name "{}"'.format(save_name))
+        plt.savefig(os.path.join(save_fig_directory, save_name))
+        plt.close()
+    else:
+        plt.show()
 
 
-def plot_sm_difference(smdf, orbitnameone, orbitnametwo, fieldname='Soil_Moisture', vmin=-1, vmax=1):
+def plot_sm_difference(smdf, orbitnameone, orbitnametwo, fieldname='Soil_Moisture', vmin=-1, vmax=1, save_fig_directory=None):
     """
-        Plot the difference between two dataframes.
+    Plot the difference between two dataframes.
 
-        :param smdf: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
-        :param orbitnameone: Name of first test orbit in difference
-        :param orbitnametwo: Name of second test orbit in difference
-        :param fieldname: string fieldname of the data field to compare
-        :return:
-        """
+    :param smdf: pandas dataframe containing Soil Moisture with index Days, Seconds, Microseconds, Grid_Point_ID
+    :param orbitnameone: Name of first test orbit in difference
+    :param orbitnametwo: Name of second test orbit in difference
+    :param fieldname: string fieldname of the data field to compare
+    :param save_fig_directory: Optional directory to save difference figures to, when None no figure is saved
+    :return:
+    """
     logging.debug('Plotting {} -> {} orbits, field {}...'.format(orbitnameone, orbitnametwo, fieldname))
 
     fig, m, dot_size = setup_sm_plot(smdf['Latitude'].values, smdf['Longitude'].values)
 
-    plt.title('{} : ({}) subtract ({})'.format(fieldname.replace('_',' '), orbitnametwo, orbitnameone))
-    cmap = 'bwr_r'
+    plt.title('{} : ({}) subtract ({})'.format(fieldname.replace('_',' '), orbitnametwo, orbitnameone), wrap=True)
+    cmap = 'bwr'
     c = smdf[fieldname]  # geophysical variable to plot
     m.scatter(smdf['Longitude'].values,
               smdf['Latitude'].values,
@@ -291,7 +308,14 @@ def plot_sm_difference(smdf, orbitnameone, orbitnametwo, fieldname='Soil_Moistur
               vmax=vmax)
     cbar = m.colorbar()
 
-    plt.show()
+    if (save_fig_directory != None):
+        # Requested to save the figure
+        save_name = 'diff-orbit-({})-subtr-({})-field-({})-{}.png'.format(orbitnametwo, orbitnameone, fieldname.replace(' ', ''), datetime.now().strftime('%Y%m%d-%H%M%S'))
+        logging.debug('Attempting to save figure with name "{}"'.format(save_name))
+        plt.savefig(os.path.join(save_fig_directory, save_name))
+        plt.close()
+    else:
+        plt.show()
 
 
 if __name__ == '__main__':
