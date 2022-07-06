@@ -139,20 +139,23 @@ def evaluate_field_diff(smdf1, smdf2, fieldname, orbitnameone, orbitnametwo, vmi
 
     # Get records in common that are same/diff
 
-    plot_sm_difference(common, orbitnameone, orbitnametwo, fieldname=fieldname+'_Diff', vmin=vmin, vmax=vmax, save_fig_directory=save_fig_directory)
-
-    #fig2, ax2 = plt.subplots(1)
-    ## plot each difference against the index grid point id
-    #common.plot(x=xaxis, y=fieldname+'_Diff', ax=ax2, legend=False, rot=90,
-    #            fontsize=8, clip_on=False, style='o')
-    #ax2.set_ylabel(fieldname + ' Diff')
-    #ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
-    #fig2.tight_layout()
-
-    # plot only the ones with a non-zero difference?
+    # Make plots only if we have differences
     if non_zero_diff.empty:
         logging.debug('No differences to plot')
     else:
+        # First plot (geographic map)
+        plot_sm_difference(common, orbitnameone, orbitnametwo, fieldname=fieldname+'_Diff', vmin=vmin, vmax=vmax, save_fig_directory=save_fig_directory)
+
+        #fig2, ax2 = plt.subplots(1)
+        ## plot each difference against the index grid point id
+        #common.plot(x=xaxis, y=fieldname+'_Diff', ax=ax2, legend=False, rot=90,
+        #            fontsize=8, clip_on=False, style='o')
+        #ax2.set_ylabel(fieldname + ' Diff')
+        #ax2.axhline(y=0, linestyle=':', linewidth='0.5', color='k')
+        #fig2.tight_layout()
+
+        # Second plot (scatter plot, diff by lat)
+        # Plot only the ones with a non-zero difference
         fig3, ax3 = plt.subplots(1)
         plt.title('{} : ({}) subtract ({})'.format(fieldname.replace('_',' '), orbitnametwo, orbitnameone), wrap=True)
         non_zero_diff.plot(x=xaxis, y=fieldname+'_Diff', ax=ax3, legend=False,
